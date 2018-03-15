@@ -20,8 +20,6 @@ pub fn load(gl_window: &glutin::GlWindow) -> Gl {
         String::from_utf8(data).unwrap()
     };
 
-    println!("OpenGL version {}", version);
-
     unsafe {
         let vs = gl.CreateShader(gl::VERTEX_SHADER);
         gl.ShaderSource(vs, 1, [VS_SRC.as_ptr() as *const _].as_ptr(), ptr::null());
@@ -70,15 +68,18 @@ impl Gl {
         unsafe {
             self.gl.ClearColor(color[0], color[1], color[2], color[3]);
             self.gl.Clear(gl::COLOR_BUFFER_BIT);
-            self.gl.DrawArrays(gl::TRIANGLES, 0, 3);
+            self.gl.DrawArrays(gl::TRIANGLES, 0, 6);
         }
     }
 }
 
-static VERTEX_DATA: [f32; 15] = [
-    -0.5, -0.5, 1.0, 0.0, 0.0,
+static VERTEX_DATA: [f32; 30] = [
+    -1.0, -1.0, 1.0, 0.0, 0.0,
     0.0, 0.5, 0.0, 1.0, 0.0,
-    0.5, -0.5, 0.0, 0.0, 1.0
+    0.5, -0.5, 0.0, 0.0, 1.0,
+    1.0, -1.0, 1.0, 0.0, 0.0,
+    0.0, 0.3, 0.0, 1.0, 0.0,
+    0.3, -0.3, 0.0, 0.0, 1.0,
 ];
 
 const VS_SRC: &'static [u8] = b"
