@@ -7,3 +7,7 @@ authors = ["Steve Mostovoy <stevemostovoysm@gmail.com>"]
 sysfs_gpio = "0.5"
 gl = "0.10"
 glutin = "0.13"
+rustfft = "2.0.0"
+
+[build-dependencies]
+gl_generator = "0.9"
