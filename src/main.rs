@@ -1,9 +1,11 @@
-mod gfx;
-mod rpio;
-
 extern crate gl;
 extern crate glutin;
+extern crate rustfft;
 extern crate sysfs_gpio;
+
+mod audio;
+mod gfx;
+mod rpio;
 
 use glutin::GlContext;
 
@@ -21,8 +23,17 @@ fn main() {
 
     let gl = gfx::load(&gl_window);
 
+    let fft_output = audio::compute_fft(audio::SINE_WAVE_SAMPLES);
+
+    let frequency_bins = audio::frequency_bins(audio::SAMPLE_RATE, audio::SAMPLE_COUNT);
+
+    println!("Frequency Bin : Amplitude");
+    let amplitudes = audio::to_amplitude(fft_output);
+    for i in 0..frequency_bins.len() {
+        println!("{}hz : {}", frequency_bins[i], amplitudes[i]);
+    }
+
     events_loop.run_forever(|event| {
-        println!("{:?}", event);
         match event {
             glutin::Event::WindowEvent { event, .. } => match event {
                 glutin::WindowEvent::Closed => return glutin::ControlFlow::Break,
