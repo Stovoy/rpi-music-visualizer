@@ -24,14 +24,48 @@ fn main() {
 
     let mut args = env::args();
     if args.len() < 2 {
-        panic!("Required argument missing: MP3 file name in music/ folder.");
+        test_graphics();
+    } else {
+        let mp3_file_name = args.nth(1).unwrap();
+        let wait = args.len() >= 1 && args.nth(0).unwrap() == "wait";
+        visualize_mp3(mp3_file_name, wait);
     }
+}
 
-    let mp3_file_name = args.nth(1).unwrap();
+fn test_graphics() {
+    let mut events_loop = glutin::EventsLoop::new();
+    let window = glutin::WindowBuilder::new()
+        .with_title("Music Visualizer")
+        .with_dimensions(1024, 768);
+    let context = glutin::ContextBuilder::new()
+        .with_vsync(true);
+    let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
+
+    let _ = unsafe { gl_window.make_current() };
+
+    let gl = gfx::load(&gl_window);
+
+    events_loop.run_forever(|event| {
+        match event {
+            glutin::Event::WindowEvent { event, .. } => match event {
+                glutin::WindowEvent::Closed => return glutin::ControlFlow::Break,
+                glutin::WindowEvent::Resized(w, h) => gl_window.resize(w, h),
+                _ => (),
+            },
+            _ => ()
+        }
+
+        gl.draw_frame([0.0, 1.0, 0.0, 1.0]);
+        let _ = gl_window.swap_buffers();
+        glutin::ControlFlow::Continue
+    });
+}
+
+fn visualize_mp3(mp3_file_name: String, wait: bool) {
     println!("Parsing {}...", mp3_file_name.clone());
     let (samples, duration_seconds) = music::read_mp3_file(mp3_file_name.clone());
 
-    if args.len() >= 1 && args.nth(0).unwrap() == "wait" {
+    if wait {
         println!("Starting playback of {} in 3...", mp3_file_name);
         sleep(Duration::from_millis(1000));
         println!("2...");
@@ -88,31 +122,4 @@ fn main() {
         current_time += elapsed;
         time_drift_offset_samples = (samples_per_sec * ((elapsed - window_duration).subsec_nanos() as f32 / 1000000000.0)) as usize;
     }
-
-    let mut events_loop = glutin::EventsLoop::new();
-    let window = glutin::WindowBuilder::new()
-        .with_title("Music Visualizer")
-        .with_dimensions(1024, 768);
-    let context = glutin::ContextBuilder::new()
-        .with_vsync(true);
-    let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
-
-    let _ = unsafe { gl_window.make_current() };
-
-    let gl = gfx::load(&gl_window);
-
-    events_loop.run_forever(|event| {
-        match event {
-            glutin::Event::WindowEvent { event, .. } => match event {
-                glutin::WindowEvent::Closed => return glutin::ControlFlow::Break,
-                glutin::WindowEvent::Resized(w, h) => gl_window.resize(w, h),
-                _ => (),
-            },
-            _ => ()
-        }
-
-        gl.draw_frame([0.0, 1.0, 0.0, 1.0]);
-        let _ = gl_window.swap_buffers();
-        glutin::ControlFlow::Continue
-    });
 }
