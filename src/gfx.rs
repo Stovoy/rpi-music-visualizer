@@ -15,7 +15,7 @@ pub struct Gl {
 pub fn load(gl_window: &glutin::GlWindow) -> Gl {
     let gl = gl::Gl::load_with(|ptr| gl_window.get_proc_address(ptr) as *const _);
 
-    let version = unsafe {
+    let _version = unsafe {
         let data = CStr::from_ptr(gl.GetString(gl::VERSION) as *const _).to_bytes().to_vec();
         String::from_utf8(data).unwrap()
     };
