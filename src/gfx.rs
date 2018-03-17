@@ -8,6 +8,7 @@ mod gl {
     include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
 }
 
+#[derive(Clone)]
 pub struct Gl {
     gl: gl::Gl
 }
@@ -39,8 +40,8 @@ pub fn load(gl_window: &glutin::GlWindow) -> Gl {
         gl.GenBuffers(1, &mut vb);
         gl.BindBuffer(gl::ARRAY_BUFFER, vb);
         gl.BufferData(gl::ARRAY_BUFFER,
-                           (VERTEX_DATA.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr,
-                           VERTEX_DATA.as_ptr() as *const _, gl::STATIC_DRAW);
+                      (VERTEX_DATA.len() * mem::size_of::<f32>()) as gl::types::GLsizeiptr,
+                      VERTEX_DATA.as_ptr() as *const _, gl::STATIC_DRAW);
 
         if gl.BindVertexArray.is_loaded() {
             let mut vao = mem::uninitialized();
@@ -51,16 +52,16 @@ pub fn load(gl_window: &glutin::GlWindow) -> Gl {
         let pos_attrib = gl.GetAttribLocation(program, b"position\0".as_ptr() as *const _);
         let color_attrib = gl.GetAttribLocation(program, b"color\0".as_ptr() as *const _);
         gl.VertexAttribPointer(pos_attrib as gl::types::GLuint, 2, gl::FLOAT, 0,
-                                    5 * mem::size_of::<f32>() as gl::types::GLsizei,
-                                    ptr::null());
+                               5 * mem::size_of::<f32>() as gl::types::GLsizei,
+                               ptr::null());
         gl.VertexAttribPointer(color_attrib as gl::types::GLuint, 3, gl::FLOAT, 0,
-                                    5 * mem::size_of::<f32>() as gl::types::GLsizei,
-                                    (2 * mem::size_of::<f32>()) as *const () as *const _);
+                               5 * mem::size_of::<f32>() as gl::types::GLsizei,
+                               (2 * mem::size_of::<f32>()) as *const () as *const _);
         gl.EnableVertexAttribArray(pos_attrib as gl::types::GLuint);
         gl.EnableVertexAttribArray(color_attrib as gl::types::GLuint);
     }
 
-    Gl { gl: gl }
+    Gl { gl }
 }
 
 impl Gl {

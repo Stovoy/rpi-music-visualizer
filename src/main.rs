@@ -5,34 +5,50 @@ extern crate lewton;
 extern crate pad;
 extern crate rustfft;
 extern crate sysfs_gpio;
+
 mod audio;
 mod gfx;
 mod rpio;
 mod music;
 
+use std::cmp;
 use std::env;
+use std::process::exit;
+use std::sync::mpsc;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
-use std::cmp;
+use std::thread;
 
 use ears::{Sound, AudioController};
 use glutin::GlContext;
 use pad::PadStr;
 
+struct AudioFrame {
+    low_power: f32,
+    mid_power: f32,
+    high_power: f32,
+}
+
 fn main() {
     println!("=== Starting Music Visualizer ===");
 
     let mut args = env::args();
-    if args.len() < 2 {
-        test_graphics();
-    } else {
-        let ogg_file_name = args.nth(1).unwrap();
-        visualize_ogg(ogg_file_name);
+    if args.len() == 1 {
+        println!("First arg must be name of ogg file in the music folder.");
+        exit(1);
     }
+    let ogg_file_name = args.nth(1).unwrap();
+
+
+    let (tx, rx) = mpsc::channel::<AudioFrame>();
+
+    thread::spawn(move || {
+        visualize_ogg(ogg_file_name, tx);
+    });
+    start_graphics(rx);
 }
 
-fn test_graphics() {
-    println!("Showing graphics");
+fn start_graphics(rx: mpsc::Receiver<AudioFrame>) {
     let mut events_loop = glutin::EventsLoop::new();
     let window = glutin::WindowBuilder::new()
         .with_title("Music Visualizer")
@@ -40,41 +56,47 @@ fn test_graphics() {
     let context = glutin::ContextBuilder::new()
         .with_vsync(true);
     let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
-
-    let _ = unsafe { gl_window.make_current() };
+    unsafe { gl_window.make_current() }.unwrap();
 
     let gl = gfx::load(&gl_window);
 
-    events_loop.run_forever(|event| {
-        match event {
-            glutin::Event::WindowEvent { event, .. } => match event {
-                glutin::WindowEvent::Closed => return glutin::ControlFlow::Break,
-                glutin::WindowEvent::Resized(w, h) => gl_window.resize(w, h),
-                _ => (),
-            },
-            _ => ()
-        }
+    let mut running = true;
+    while running {
+        let audio_frame = rx.recv().unwrap();
 
-        gl.draw_frame([0.0, 1.0, 0.0, 1.0]);
-        let _ = gl_window.swap_buffers();
-        glutin::ControlFlow::Continue
-    });
+        events_loop.poll_events(|event| {
+            match event {
+                glutin::Event::WindowEvent { event, .. } => match event {
+                    glutin::WindowEvent::Closed => running = false,
+                    glutin::WindowEvent::Resized(w, h) => gl_window.resize(w, h),
+                    _ => ()
+                },
+                _ => ()
+            }
+        });
+        gl.draw_frame([
+            audio_frame.low_power,
+            audio_frame.mid_power,
+            audio_frame.high_power,
+            1.0]);
+        gl_window.swap_buffers().unwrap();
+    }
 }
 
-fn visualize_ogg(ogg_file_name: String) {
+fn visualize_ogg(ogg_file_name: String, tx: mpsc::Sender<AudioFrame>) {
     println!("Parsing {}...", ogg_file_name.clone());
 
     let ogg_file_path = format!("music/{}", ogg_file_name);
     let (samples, duration_seconds) = music::read_ogg_file(ogg_file_path.clone());
 
-    println!("Playing {}...", ogg_file_name.clone());
     // Play the song audio.
+    println!("Playing {}...", ogg_file_name.clone());
     let mut sound = Sound::new(&ogg_file_path).unwrap();
     sound.play();
 
     let samples_per_sec = (samples.len() as f32 / duration_seconds).ceil();
 
-    let window_size_sec = 0.001;
+    let window_size_sec = 0.02;
     let window_duration = Duration::from_millis((window_size_sec * 1000.0) as u64);
     let window_size_samples = (samples_per_sec * window_size_sec).ceil();
 
@@ -107,11 +129,13 @@ fn visualize_ogg(ogg_file_name: String) {
             }
         }
 
-        println!("LOW {} | MID {} | HIGH {} | {}.{}s",
-            (0..((low_power * 10.0) as usize)).map(|_| '#').collect::<String>().with_exact_width(10),
-            (0..((mid_power * 10.0) as usize)).map(|_| '#').collect::<String>().with_exact_width(10),
-            (0..((high_power * 10.0) as usize)).map(|_| '#').collect::<String>().with_exact_width(10),
-            current_time.as_secs(), current_time.subsec_nanos());
+        let audio_frame = AudioFrame { low_power, mid_power, high_power };
+        tx.send(audio_frame).unwrap();
+        // println!("LOW {} | MID {} | HIGH {} | {}.{}s",
+        //          (0..((low_power * 10.0) as usize)).map(|_| '#').collect::<String>().with_exact_width(10),
+        //          (0..((mid_power * 10.0) as usize)).map(|_| '#').collect::<String>().with_exact_width(10),
+        //          (0..((high_power * 10.0) as usize)).map(|_| '#').collect::<String>().with_exact_width(10),
+        //          current_time.as_secs(), current_time.subsec_nanos());
 
         sleep(window_duration);
         window_start = window_end + 1;
