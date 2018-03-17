@@ -1,10 +1,10 @@
+extern crate ears;
 extern crate gl;
 extern crate glutin;
+extern crate lewton;
 extern crate pad;
 extern crate rustfft;
 extern crate sysfs_gpio;
-extern crate simplemad;
-
 mod audio;
 mod gfx;
 mod rpio;
@@ -12,10 +12,10 @@ mod music;
 
 use std::env;
 use std::thread::sleep;
-use std::time::Duration;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use std::cmp;
 
+use ears::{Sound, AudioController};
 use glutin::GlContext;
 use pad::PadStr;
 
@@ -26,13 +26,13 @@ fn main() {
     if args.len() < 2 {
         test_graphics();
     } else {
-        let mp3_file_name = args.nth(1).unwrap();
-        let wait = args.len() >= 1 && args.nth(0).unwrap() == "wait";
-        visualize_mp3(mp3_file_name, wait);
+        let ogg_file_name = args.nth(1).unwrap();
+        visualize_ogg(ogg_file_name);
     }
 }
 
 fn test_graphics() {
+    println!("Showing graphics");
     let mut events_loop = glutin::EventsLoop::new();
     let window = glutin::WindowBuilder::new()
         .with_title("Music Visualizer")
@@ -61,18 +61,16 @@ fn test_graphics() {
     });
 }
 
-fn visualize_mp3(mp3_file_name: String, wait: bool) {
-    println!("Parsing {}...", mp3_file_name.clone());
-    let (samples, duration_seconds) = music::read_mp3_file(mp3_file_name.clone());
+fn visualize_ogg(ogg_file_name: String) {
+    println!("Parsing {}...", ogg_file_name.clone());
 
-    if wait {
-        println!("Starting playback of {} in 3...", mp3_file_name);
-        sleep(Duration::from_millis(1000));
-        println!("2...");
-        sleep(Duration::from_millis(1000));
-        println!("1...");
-        sleep(Duration::from_millis(1000));
-    }
+    let ogg_file_path = format!("music/{}", ogg_file_name);
+    let (samples, duration_seconds) = music::read_ogg_file(ogg_file_path.clone());
+
+    println!("Playing {}...", ogg_file_name.clone());
+    // Play the song audio.
+    let mut sound = Sound::new(&ogg_file_path).unwrap();
+    sound.play();
 
     let samples_per_sec = (samples.len() as f32 / duration_seconds).ceil();
 

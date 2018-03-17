@@ -1,31 +1,30 @@
 use std::fs::File;
 use std::path::Path;
 
-use simplemad::Decoder;
+use lewton::inside_ogg::OggStreamReader;
 
 /// Returns Vec of samples, and duration in seconds.
-pub fn read_mp3_file(file_name: String) -> (Vec<f32>, f32) {
-	let path_string = format!("music/{}", file_name);
-	let path = Path::new(&path_string);
-	let file = File::open(&path).unwrap();
-	let decoder = Decoder::decode(file).unwrap();
+pub fn read_ogg_file(file_name: String) -> (Vec<f32>, f32) {
+    let path = Path::new(&file_name);
+    let file = File::open(&path).unwrap();
 
-	let mut samples = Vec::new();
-	let mut duration = 0.0;
-	for decoding_result in decoder {
-	    match decoding_result {
-	        Err(e) => println!("Error: {:?}", e),
-	        Ok(frame) => {
-	        	duration += frame.duration.as_secs() as f32 + (frame.duration.subsec_nanos() as f32 / 1000000000.0);
-	        	for i in 0..frame.samples[0].len() {
-		        	let l_sample = frame.samples[0][i].to_f32();
-		        	let r_sample = frame.samples[1][i].to_f32();
-		        	let avg_sample = (l_sample + r_sample) / 2.0;
-	        		samples.push(avg_sample);
-	        	}
-	        },
-	    }
-	}
+    let mut stream_reader = OggStreamReader::new(file).unwrap();
 
-	(samples, duration)
+    let mut samples = Vec::new();
+    let mut duration = 0.0;
+
+    let sample_rate = stream_reader.ident_hdr.audio_sample_rate as i32;
+    let sample_channels = stream_reader.ident_hdr.audio_channels as f32 *
+        stream_reader.ident_hdr.audio_sample_rate as f32;
+
+    while let Some(packet_samples) = stream_reader.read_dec_packet_itl().unwrap() {
+        for i in 0..packet_samples.len() {
+            let sample_value = packet_samples[i] as f32 / i16::max_value() as f32;
+            let clamped_value = f32::max(-1.0, f32::min(1.0, sample_value));
+            samples.push(clamped_value);
+        }
+        duration += packet_samples.len() as f32 / sample_channels;
+    }
+
+    (samples, duration)
 }
