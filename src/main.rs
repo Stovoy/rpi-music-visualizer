@@ -2,7 +2,6 @@ extern crate ears;
 extern crate gl;
 extern crate glutin;
 extern crate lewton;
-extern crate pad;
 extern crate rustfft;
 extern crate sysfs_gpio;
 
@@ -21,13 +20,6 @@ use std::thread;
 
 use ears::{Sound, AudioController};
 use glutin::GlContext;
-use pad::PadStr;
-
-struct AudioFrame {
-    low_power: f32,
-    mid_power: f32,
-    high_power: f32,
-}
 
 fn main() {
     println!("=== Starting Music Visualizer ===");
@@ -40,7 +32,7 @@ fn main() {
     let ogg_file_name = args.nth(1).unwrap();
 
 
-    let (tx, rx) = mpsc::channel::<AudioFrame>();
+    let (tx, rx) = mpsc::channel::<audio::AudioFrame>();
 
     thread::spawn(move || {
         visualize_ogg(ogg_file_name, tx);
@@ -48,17 +40,17 @@ fn main() {
     start_graphics(rx);
 }
 
-fn start_graphics(rx: mpsc::Receiver<AudioFrame>) {
+fn start_graphics(rx: mpsc::Receiver<audio::AudioFrame>) {
     let mut events_loop = glutin::EventsLoop::new();
     let window = glutin::WindowBuilder::new()
         .with_title("Music Visualizer")
-        .with_dimensions(1024, 768);
+        .with_dimensions(800, 800);
     let context = glutin::ContextBuilder::new()
         .with_vsync(true);
     let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
     unsafe { gl_window.make_current() }.unwrap();
 
-    let gl = gfx::load(&gl_window);
+    let mut gl = gfx::load(&gl_window);
 
     let mut running = true;
     while running {
@@ -74,16 +66,13 @@ fn start_graphics(rx: mpsc::Receiver<AudioFrame>) {
                 _ => ()
             }
         });
-        gl.draw_frame([
-            audio_frame.low_power,
-            audio_frame.mid_power,
-            audio_frame.high_power,
-            1.0]);
+
+        gl.draw_frame(audio_frame);
         gl_window.swap_buffers().unwrap();
     }
 }
 
-fn visualize_ogg(ogg_file_name: String, tx: mpsc::Sender<AudioFrame>) {
+fn visualize_ogg(ogg_file_name: String, tx: mpsc::Sender<audio::AudioFrame>) {
     println!("Parsing {}...", ogg_file_name.clone());
 
     let ogg_file_path = format!("music/{}", ogg_file_name);
@@ -128,14 +117,12 @@ fn visualize_ogg(ogg_file_name: String, tx: mpsc::Sender<AudioFrame>) {
                 high_power += amplitudes[i];
             }
         }
+        low_power = f32::min(1.0, low_power);
+        mid_power = f32::min(1.0, mid_power);
+        high_power= f32::min(1.0, high_power);
 
-        let audio_frame = AudioFrame { low_power, mid_power, high_power };
+        let audio_frame = audio::AudioFrame { low_power, mid_power, high_power };
         tx.send(audio_frame).unwrap();
-        // println!("LOW {} | MID {} | HIGH {} | {}.{}s",
-        //          (0..((low_power * 10.0) as usize)).map(|_| '#').collect::<String>().with_exact_width(10),
-        //          (0..((mid_power * 10.0) as usize)).map(|_| '#').collect::<String>().with_exact_width(10),
-        //          (0..((high_power * 10.0) as usize)).map(|_| '#').collect::<String>().with_exact_width(10),
-        //          current_time.as_secs(), current_time.subsec_nanos());
 
         sleep(window_duration);
         window_start = window_end + 1;

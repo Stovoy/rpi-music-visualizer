@@ -14,7 +14,7 @@ use rustfft::num_traits::Zero;
 // The combination of real and complex represents the amplitude and phase of that frequency bucket.
 
 pub fn compute_fft(source: Vec<f32>) -> Vec<Complex<f32>> {
-    let mut input:  Vec<Complex<f32>> = vec![Complex::zero(); source.len()];
+    let mut input: Vec<Complex<f32>> = vec![Complex::zero(); source.len()];
     let mut output: Vec<Complex<f32>> = vec![Complex::zero(); source.len()];
 
     for i in 0..source.len() {
@@ -29,26 +29,31 @@ pub fn compute_fft(source: Vec<f32>) -> Vec<Complex<f32>> {
 }
 
 pub fn frequency_bins(sample_rate: u32, sample_count: u32) -> Vec<f32> {
-	let bin_count = (sample_count / 2) as usize;
-	let mut output: Vec<f32> = vec![0.0; bin_count];
+    let bin_count = (sample_count / 2) as usize;
+    let mut output: Vec<f32> = vec![0.0; bin_count];
 
-	for i in 0..bin_count {
-		output[i] = (i as f32) * (sample_rate as f32) / (sample_count as f32);
-	}
+    for i in 0..bin_count {
+        output[i] = (i as f32) * (sample_rate as f32) / (sample_count as f32);
+    }
 
-	output
+    output
 }
 
 pub fn to_amplitude(input: Vec<Complex<f32>>) -> Vec<f32> {
-    // TODO: How to normalize these ampltitudes based on maximum energy in the discrete FFT?
-	let mut output: Vec<f32> = vec![0.0; input.len()];
+    let mut output: Vec<f32> = vec![0.0; input.len()];
 
-	for i in 0..input.len() {
-		let re = input[i].re;
-		let im = input[i].im;
-		output[i] = (re * re + im * im).sqrt() / input.len() as f32;
-	}
+    for i in 0..input.len() {
+        let re = input[i].re;
+        let im = input[i].im;
+        output[i] = (re * re + im * im).sqrt() / input.len() as f32;
+    }
 
-	output
+    output
 }
 
+
+pub struct AudioFrame {
+	pub low_power: f32,
+    pub mid_power: f32,
+    pub high_power: f32,
+}

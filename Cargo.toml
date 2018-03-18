@@ -10,7 +10,6 @@ gl = "0.10"
 glutin = "0.13"
 lewton = "0.8.0"
 rustfft = "2.0.0"
-pad = "0.1"
 
 [build-dependencies]
 gl_generator = "0.9"
