@@ -2,6 +2,7 @@ use sysfs_gpio::{Direction, Pin};
 use std::thread::sleep;
 use std::time::Duration;
 
+#[allow(dead_code)]
 fn blink_pin(pin_number: u64) {
     let pin = Pin::new(pin_number);
     pin.set_direction(Direction::Out).unwrap();
