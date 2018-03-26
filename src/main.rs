@@ -9,6 +9,7 @@ mod audio;
 mod gfx;
 mod rpio;
 mod music;
+mod led_disk_emulator;
 
 use std::cmp;
 use std::env;
@@ -37,7 +38,9 @@ fn main() {
     thread::spawn(move || {
         visualize_ogg(ogg_file_name, tx);
     });
-    start_graphics(rx);
+
+    start_emulated_screen();
+    // start_graphics(rx);
 }
 
 fn start_graphics(rx: mpsc::Receiver<audio::AudioFrame>) {
@@ -68,6 +71,36 @@ fn start_graphics(rx: mpsc::Receiver<audio::AudioFrame>) {
         });
 
         gl.draw_frame(audio_frame);
+        gl_window.swap_buffers().unwrap();
+    }
+}
+
+fn start_emulated_screen() {
+    let mut events_loop = glutin::EventsLoop::new();
+    let window = glutin::WindowBuilder::new()
+        .with_title("LED Disk Emulator")
+        .with_dimensions(800, 800);
+    let context = glutin::ContextBuilder::new()
+        .with_vsync(true);
+    let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
+    unsafe { gl_window.make_current() }.unwrap();
+
+    let mut gl = led_disk_emulator::load(&gl_window);
+
+    let mut running = true;
+    while running {
+        events_loop.poll_events(|event| {
+            match event {
+                glutin::Event::WindowEvent { event, .. } => match event {
+                    glutin::WindowEvent::Closed => running = false,
+                    glutin::WindowEvent::Resized(w, h) => gl_window.resize(w, h),
+                    _ => ()
+                },
+                _ => ()
+            }
+        });
+
+        gl.draw_frame();
         gl_window.swap_buffers().unwrap();
     }
 }
