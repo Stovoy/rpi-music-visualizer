@@ -5,12 +5,12 @@ use rustfft::num_traits::Zero;
 // == FFT Notes ==
 
 // Frequencies
-// Reference: https://stackoverflow.com/questions/4364823/how-do-i-obtain-the-frequencies-of-each-value-in-an-fft
+// Reference: https://stackoverflow.com/questions/4364823/
 // Each bin of FFT output represents frequency [i * sample_rate / sample_count].
 // N / 2 will represent the Nyquist frequency.
 
 // Why is it a complex number?
-// Reference: https://www.gaussianwaves.com/2015/11/interpreting-fft-results-obtaining-magnitude-and-phase-information/
+// Reference: https://www.gaussianwaves.com/2015/11/interpreting-fft
 // The combination of real and complex represents the amplitude and phase of that frequency bucket.
 
 pub fn compute_fft(source: Vec<f32>) -> Vec<Complex<f32>> {
@@ -45,6 +45,7 @@ pub fn to_amplitude(input: Vec<Complex<f32>>) -> Vec<f32> {
     for i in 0..input.len() {
         let re = input[i].re;
         let im = input[i].im;
+        // TODO: Fix normalization.
         output[i] = (re * re + im * im).sqrt() / input.len() as f32;
     }
 
@@ -53,7 +54,7 @@ pub fn to_amplitude(input: Vec<Complex<f32>>) -> Vec<f32> {
 
 
 pub struct AudioFrame {
-	pub low_power: f32,
+    pub low_power: f32,
     pub mid_power: f32,
     pub high_power: f32,
 }

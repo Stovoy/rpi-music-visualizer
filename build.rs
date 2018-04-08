@@ -1,9 +1,10 @@
 extern crate gl_generator;
 
-use gl_generator::{Registry, Api, Profile, Fallbacks};
 use std::env;
 use std::fs::File;
 use std::path::PathBuf;
+
+use gl_generator::{Registry, Api, Profile, Fallbacks};
 
 fn main() {
     let dest = PathBuf::from(&env::var("OUT_DIR").unwrap());

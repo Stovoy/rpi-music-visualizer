@@ -13,8 +13,8 @@ pub fn read_ogg_file(file_name: String) -> (Vec<f32>, f32) {
     let mut samples = Vec::new();
     let mut duration = 0.0;
 
-    let sample_channels = stream_reader.ident_hdr.audio_channels as f32 *
-        stream_reader.ident_hdr.audio_sample_rate as f32;
+    let sample_channels = stream_reader.ident_hdr.audio_channels as f32
+        * stream_reader.ident_hdr.audio_sample_rate as f32;
 
     while let Some(packet_samples) = stream_reader.read_dec_packet_itl().unwrap() {
         for i in 0..packet_samples.len() {
