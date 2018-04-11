@@ -3,16 +3,110 @@ use std::mem;
 use std::ptr;
 use gl;
 
+use led_mapper;
+use led_mapper::led_disk_mapper::NUM_PIXELS;
+use led_mapper::led_disk_mapper::PIXEL_RADIUS;
 use screen;
 use gfx;
 
 pub struct LedDiskEmulatorScreen {
     program_id: u32,
+    mapper: led_mapper::LedDiskMapper,
 }
+
+const FLOATS_PER_VERTEX: usize = 8;
+const FLOATS_PER_PIXEL: usize = 6 * FLOATS_PER_VERTEX;
 
 impl LedDiskEmulatorScreen {
     pub fn new() -> LedDiskEmulatorScreen {
-        LedDiskEmulatorScreen { program_id: 0 }
+        LedDiskEmulatorScreen {
+            program_id: 0,
+            mapper: led_mapper::LedDiskMapper::new(),
+        }
+    }
+
+    fn generate_vertex_data(&self, pixel_colors: [u8; 3 * NUM_PIXELS]) -> [f32; FLOATS_PER_PIXEL * NUM_PIXELS] {
+        let mut pixels_from_triangles: [f32; FLOATS_PER_PIXEL * NUM_PIXELS] =
+            [0.0; FLOATS_PER_PIXEL * NUM_PIXELS];
+        for pixel in 0..NUM_PIXELS {
+            let (x, y) = self.mapper.get_pixel_normalized_position(pixel as u8);
+
+            let pixel_index = pixel * 3;
+            let r = pixel_colors[pixel_index] as f32 / 255.0;
+            let g = pixel_colors[pixel_index + 1] as f32 / 255.0;
+            let b = pixel_colors[pixel_index + 2] as f32 / 255.0;
+
+            // 2 triangles per pixel to form a square enclosing it.
+            // Triangle 1
+            // -, -
+            let mut vertex_index = pixel * FLOATS_PER_PIXEL;
+            pixels_from_triangles[(vertex_index + 0) as usize] = x;
+            pixels_from_triangles[(vertex_index + 1) as usize] = y;
+            pixels_from_triangles[(vertex_index + 2) as usize] = x - PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 3) as usize] = y - PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 4) as usize] = PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 5) as usize] = r;
+            pixels_from_triangles[(vertex_index + 6) as usize] = g;
+            pixels_from_triangles[(vertex_index + 7) as usize] = b;
+
+            // -, +
+            vertex_index += FLOATS_PER_VERTEX;
+            pixels_from_triangles[(vertex_index + 0) as usize] = x;
+            pixels_from_triangles[(vertex_index + 1) as usize] = y;
+            pixels_from_triangles[(vertex_index + 2) as usize] = x - PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 3) as usize] = y + PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 4) as usize] = PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 5) as usize] = r;
+            pixels_from_triangles[(vertex_index + 6) as usize] = g;
+            pixels_from_triangles[(vertex_index + 7) as usize] = b;
+
+            // +, +
+            vertex_index += FLOATS_PER_VERTEX;
+            pixels_from_triangles[(vertex_index + 0) as usize] = x;
+            pixels_from_triangles[(vertex_index + 1) as usize] = y;
+            pixels_from_triangles[(vertex_index + 2) as usize] = x + PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 3) as usize] = y + PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 4) as usize] = PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 5) as usize] = r;
+            pixels_from_triangles[(vertex_index + 6) as usize] = g;
+            pixels_from_triangles[(vertex_index + 7) as usize] = b;
+
+            // Triangle 2
+            // -, -
+            vertex_index += FLOATS_PER_VERTEX;
+            pixels_from_triangles[(vertex_index + 0) as usize] = x;
+            pixels_from_triangles[(vertex_index + 1) as usize] = y;
+            pixels_from_triangles[(vertex_index + 2) as usize] = x - PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 3) as usize] = y - PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 4) as usize] = PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 5) as usize] = r;
+            pixels_from_triangles[(vertex_index + 6) as usize] = g;
+            pixels_from_triangles[(vertex_index + 7) as usize] = b;
+
+            // +, -
+            vertex_index += FLOATS_PER_VERTEX;
+            pixels_from_triangles[(vertex_index + 0) as usize] = x;
+            pixels_from_triangles[(vertex_index + 1) as usize] = y;
+            pixels_from_triangles[(vertex_index + 2) as usize] = x + PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 3) as usize] = y - PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 4) as usize] = PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 5) as usize] = r;
+            pixels_from_triangles[(vertex_index + 6) as usize] = g;
+            pixels_from_triangles[(vertex_index + 7) as usize] = b;
+
+            // +, +
+            vertex_index += FLOATS_PER_VERTEX;
+            pixels_from_triangles[(vertex_index + 0) as usize] = x;
+            pixels_from_triangles[(vertex_index + 1) as usize] = y;
+            pixels_from_triangles[(vertex_index + 2) as usize] = x + PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 3) as usize] = y + PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 4) as usize] = PIXEL_RADIUS;
+            pixels_from_triangles[(vertex_index + 5) as usize] = r;
+            pixels_from_triangles[(vertex_index + 6) as usize] = g;
+            pixels_from_triangles[(vertex_index + 7) as usize] = b;
+        }
+
+        pixels_from_triangles
     }
 }
 
@@ -51,11 +145,13 @@ impl screen::Screen for LedDiskEmulatorScreen {
         }
     }
 
-    fn render_from_texture(&self, gl: &gfx::gl::Gl, _texture: u32) {
+    fn render_from_texture(&self, gl: &gfx::gl::Gl, texture: u32) {
         unsafe {
+            let pixel_colors = self.mapper.map_from_texture(gl, texture);
+
             gl_try!(gl; gl.UseProgram(self.program_id));
 
-            let vertex_data = generate_vertex_data();
+            let vertex_data = self.generate_vertex_data(pixel_colors);
 
             let mut vb = mem::uninitialized();
             gl_try!(gl; gl.GenBuffers(1, &mut vb));
@@ -79,24 +175,32 @@ impl screen::Screen for LedDiskEmulatorScreen {
                 self.program_id, b"position\0".as_ptr() as *const _));
             let radius_attrib = gl_try!(gl; gl.GetAttribLocation(
                 self.program_id, b"radius\0".as_ptr() as *const _));
+            let color_attrib = gl_try!(gl; gl.GetAttribLocation(
+                self.program_id, b"color\0".as_ptr() as *const _));
             gl_try!(gl; gl.VertexAttribPointer(
                 center_attrib as gl::types::GLuint, 2, gl::FLOAT,
-                0, 5 * mem::size_of::<f32>() as gl::types::GLsizei,
+                0, 8 * mem::size_of::<f32>() as gl::types::GLsizei,
                 ptr::null(),
             ));
             gl_try!(gl; gl.VertexAttribPointer(
                 pos_attrib as gl::types::GLuint, 2, gl::FLOAT,
-                0, 5 * mem::size_of::<f32>() as gl::types::GLsizei,
+                0, 8 * mem::size_of::<f32>() as gl::types::GLsizei,
                 (2 * mem::size_of::<f32>()) as *const () as *const _,
             ));
             gl_try!(gl; gl.VertexAttribPointer(
                 radius_attrib as gl::types::GLuint, 1, gl::FLOAT,
-                0, 5 * mem::size_of::<f32>() as gl::types::GLsizei,
+                0, 8 * mem::size_of::<f32>() as gl::types::GLsizei,
                 (4 * mem::size_of::<f32>()) as *const () as *const _,
+            ));
+            gl_try!(gl; gl.VertexAttribPointer(
+                color_attrib as gl::types::GLuint, 3, gl::FLOAT,
+                0, 8 * mem::size_of::<f32>() as gl::types::GLsizei,
+                (5 * mem::size_of::<f32>()) as *const () as *const _,
             ));
             gl_try!(gl; gl.EnableVertexAttribArray(center_attrib as gl::types::GLuint));
             gl_try!(gl; gl.EnableVertexAttribArray(pos_attrib as gl::types::GLuint));
             gl_try!(gl; gl.EnableVertexAttribArray(radius_attrib as gl::types::GLuint));
+            gl_try!(gl; gl.EnableVertexAttribArray(color_attrib as gl::types::GLuint));
 
             gl_try!(gl; gl.BindFramebuffer(gl::FRAMEBUFFER, 0));
 
@@ -110,113 +214,6 @@ impl screen::Screen for LedDiskEmulatorScreen {
 }
 
 
-static RINGS: [[u8; 2]; 10] = [
-    [254, 254],
-    [248, 253],
-    [236, 247],
-    [216, 235],
-    [192, 215],
-    [164, 191],
-    [132, 163],
-    [92, 131],
-    [48, 91],
-    [0, 47],
-];
-
-const DISTANCE_BETWEEN_RINGS: f32 = 0.1;
-const PIXEL_RADIUS: f32 = 0.03;
-
-const NUM_PIXELS: usize = 255;
-
-// Given a pixel from 0..255, return it's x y position as a 2d float in the gl point psace
-// [-1, 1] * [-1..1]
-fn get_pixel_real_position(pixel: u8) -> (f32, f32) {
-    let ring_index = get_pixel_ring_index(pixel);
-    let start_index = RINGS[ring_index as usize][0];
-    let end_index = RINGS[ring_index as usize][1];
-    let radians_between_pixels = 2.0 * f32::consts::PI / (end_index - start_index + 1) as f32;
-    let angle = (pixel - start_index) as f32 * radians_between_pixels;
-    let radius = ring_index as f32 * DISTANCE_BETWEEN_RINGS;
-
-    (radius * f32::cos(angle), radius * f32::sin(angle))
-}
-
-// Get the ring index for given pixel.
-fn get_pixel_ring_index(pixel: u8) -> u8 {
-    for (i, ring) in RINGS.iter().enumerate() {
-        if pixel >= ring[0] && pixel <= ring[1] {
-            return i as u8;
-        }
-    }
-
-    0
-}
-
-
-const FLOATS_PER_VERTEX: usize = 5;
-const FLOATS_PER_PIXEL: usize = 6 * FLOATS_PER_VERTEX;
-
-fn generate_vertex_data() -> [f32; FLOATS_PER_PIXEL * NUM_PIXELS] {
-    let mut pixels_from_triangles: [f32; FLOATS_PER_PIXEL * NUM_PIXELS] =
-        [0.0; FLOATS_PER_PIXEL * NUM_PIXELS];
-    for pixel in 0..NUM_PIXELS {
-        let (x, y) = get_pixel_real_position(pixel as u8);
-
-        // 2 triangles per pixel to form a square enclosing it.
-        // Triangle 1
-        // -, -
-        let mut vertex_index = pixel * FLOATS_PER_PIXEL;
-        pixels_from_triangles[(vertex_index + 0) as usize] = x;
-        pixels_from_triangles[(vertex_index + 1) as usize] = y;
-        pixels_from_triangles[(vertex_index + 2) as usize] = x - PIXEL_RADIUS;
-        pixels_from_triangles[(vertex_index + 3) as usize] = y - PIXEL_RADIUS;
-        pixels_from_triangles[(vertex_index + 4) as usize] = PIXEL_RADIUS;
-
-        // -, +
-        vertex_index += FLOATS_PER_VERTEX;
-        pixels_from_triangles[(vertex_index + 0) as usize] = x;
-        pixels_from_triangles[(vertex_index + 1) as usize] = y;
-        pixels_from_triangles[(vertex_index + 2) as usize] = x - PIXEL_RADIUS;
-        pixels_from_triangles[(vertex_index + 3) as usize] = y + PIXEL_RADIUS;
-        pixels_from_triangles[(vertex_index + 4) as usize] = PIXEL_RADIUS;
-
-        // +, +
-        vertex_index += FLOATS_PER_VERTEX;
-        pixels_from_triangles[(vertex_index + 0) as usize] = x;
-        pixels_from_triangles[(vertex_index + 1) as usize] = y;
-        pixels_from_triangles[(vertex_index + 2) as usize] = x + PIXEL_RADIUS;
-        pixels_from_triangles[(vertex_index + 3) as usize] = y + PIXEL_RADIUS;
-        pixels_from_triangles[(vertex_index + 4) as usize] = PIXEL_RADIUS;
-
-        // Triangle 2
-        // -, -
-        vertex_index += FLOATS_PER_VERTEX;
-        pixels_from_triangles[(vertex_index + 0) as usize] = x;
-        pixels_from_triangles[(vertex_index + 1) as usize] = y;
-        pixels_from_triangles[(vertex_index + 2) as usize] = x - PIXEL_RADIUS;
-        pixels_from_triangles[(vertex_index + 3) as usize] = y - PIXEL_RADIUS;
-        pixels_from_triangles[(vertex_index + 4) as usize] = PIXEL_RADIUS;
-
-        // +, -
-        vertex_index += FLOATS_PER_VERTEX;
-        pixels_from_triangles[(vertex_index + 0) as usize] = x;
-        pixels_from_triangles[(vertex_index + 1) as usize] = y;
-        pixels_from_triangles[(vertex_index + 2) as usize] = x + PIXEL_RADIUS;
-        pixels_from_triangles[(vertex_index + 3) as usize] = y - PIXEL_RADIUS;
-        pixels_from_triangles[(vertex_index + 4) as usize] = PIXEL_RADIUS;
-
-        // +, +
-        vertex_index += FLOATS_PER_VERTEX;
-        pixels_from_triangles[(vertex_index + 0) as usize] = x;
-        pixels_from_triangles[(vertex_index + 1) as usize] = y;
-        pixels_from_triangles[(vertex_index + 2) as usize] = x + PIXEL_RADIUS;
-        pixels_from_triangles[(vertex_index + 3) as usize] = y + PIXEL_RADIUS;
-        pixels_from_triangles[(vertex_index + 4) as usize] = PIXEL_RADIUS;
-    }
-
-    pixels_from_triangles
-}
-
 const VS_SRC: &'static [u8] = b"
 #version 100
 precision mediump float;
@@ -224,17 +221,20 @@ precision mediump float;
 attribute vec2 center;
 attribute vec2 position;
 attribute float radius;
+attribute vec3 color;
 
 // Variables for the Fragment Shader.
 varying vec2 v_center;
 varying vec2 v_position;
 varying float v_radius;
+varying vec3 v_color;
 
 void main() {
     gl_Position = vec4(position, 0.0, 1.0);
     v_center = center;
     v_position = position;
     v_radius = radius;
+    v_color = color;
 }
 \0";
 
@@ -242,12 +242,11 @@ const FS_SRC: &'static [u8] = b"
 #version 100
 precision mediump float;
 
-// Interpolated from the Fragment Shader.
+// Interpolated from the Vertex Shader.
 varying vec2 v_center;
 varying vec2 v_position;
 varying float v_radius;
-
-uniform sampler2D texture_sampler;
+varying vec3 v_color;
 
 void main() {
     vec2 rel_pos = v_position - v_center;
@@ -257,14 +256,14 @@ void main() {
         // Out of bounds.
         gl_FragColor = vec4(0.0);
     } else {
-        float x = (v_position.x + 1.0) / 2.0;
-        float y = (v_position.y + 1.0) / 2.0;
-        vec4 color = texture2D(texture_sampler, vec2(x, y));
-
         float position_to_radius_ratio = 1.0 - (center_dist / radius_dist);
-        color = color * position_to_radius_ratio;
 
-        gl_FragColor = color;
+        vec3 color = v_color;
+        if (position_to_radius_ratio < 0.8) {
+            color *= position_to_radius_ratio * 0.75;
+        }
+
+        gl_FragColor = vec4(color, 1.0);
     }
 }
 \0";

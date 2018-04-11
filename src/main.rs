@@ -5,10 +5,12 @@ extern crate lewton;
 extern crate rustfft;
 extern crate sysfs_gpio;
 
-mod audio;
-mod listen;
 #[macro_use]
 mod gfx;
+
+mod audio;
+mod led_mapper;
+mod listen;
 mod rpio;
 mod music;
 mod screen;

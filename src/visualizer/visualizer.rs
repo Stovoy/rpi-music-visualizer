@@ -218,7 +218,7 @@ precision mediump float;
 
 #define PI 3.1415926535897932384626433832795
 
-// Interpolated from the Fragment Shader.
+// Interpolated from the Vertex Shader.
 varying vec2 v_position;
 varying vec3 v_color;
 varying float v_radius;

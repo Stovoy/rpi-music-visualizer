@@ -113,7 +113,7 @@ precision mediump float;
 
 uniform sampler2D texture_sampler;
 
-// Interpolated from the Fragment Shader.
+// Interpolated from the Vertex Shader.
 varying vec2 v_position;
 
 void main() {
