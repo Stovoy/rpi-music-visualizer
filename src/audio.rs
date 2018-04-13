@@ -53,6 +53,7 @@ pub fn to_amplitude(input: Vec<Complex<f32>>) -> Vec<f32> {
 }
 
 
+#[derive(Clone)]
 pub struct AudioFrame {
     pub low_power: f32,
     pub mid_power: f32,

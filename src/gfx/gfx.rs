@@ -97,14 +97,17 @@ impl GfxPipeline {
     }
 
     pub fn update(&mut self, audio_frame: audio::AudioFrame) {
+        self.visualizer.update(audio_frame);
+
         unsafe {
             let gl = &self.gl;
             gl_try!(gl; gl.ClearColor(0.0, 0.0, 0.0, 1.0));
             gl_try!(gl; gl.Clear(gl::COLOR_BUFFER_BIT));
 
             gl_try!(gl; gl.Viewport(0, 0, 1024, 1024));
-            let texture = self.visualizer.render_to_texture(gl, audio_frame);
-            gl_try!(gl; gl.Viewport(0, 0, 2048, 2048));
+            let texture = self.visualizer.render_to_texture(gl);
+            // TODO: Scale based on display size (pixel density / resolution mismatch).
+            gl_try!(gl; gl.Viewport(0, 0, 1024, 1024));
             self.screen.render_from_texture(gl, texture);
         }
     }

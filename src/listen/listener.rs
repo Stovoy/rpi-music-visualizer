@@ -8,7 +8,7 @@ use ears::{AudioController, Sound};
 use audio;
 use music;
 
-pub fn visualize_ogg(ogg_file_name: String, tx: mpsc::Sender<audio::AudioFrame>) {
+pub fn visualize_ogg(ogg_file_name: String, use_sound: bool, tx: mpsc::Sender<audio::AudioFrame>) {
     println!("Parsing {}...", ogg_file_name.clone());
 
     let ogg_file_path = format!("music/{}", ogg_file_name);
@@ -18,8 +18,7 @@ pub fn visualize_ogg(ogg_file_name: String, tx: mpsc::Sender<audio::AudioFrame>)
     println!("Playing {}...", ogg_file_name.clone());
     let mut sound = Sound::new(&ogg_file_path).unwrap();
 
-    let muted = true; // For debugging.
-    if !muted {
+    if use_sound {
         sound.play();
     }
 
