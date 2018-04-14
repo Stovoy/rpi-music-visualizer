@@ -78,8 +78,8 @@ impl LedDiskMapper {
                 ];
 
                 let (mut r_avg, mut g_avg, mut b_avg) = (0, 0, 0);
-                for (x, y) in normalized_sample_positions.iter() {
-                    let (x_index, y_index) = get_index(*x, *y);
+                for &(x, y) in normalized_sample_positions.iter() {
+                    let (x_index, y_index) = get_index(x, y);
                     let (r, g, b) = get_rgb(x_index, y_index);
                     r_avg += r / normalized_sample_positions.len() as u8;
                     g_avg += g / normalized_sample_positions.len() as u8;
