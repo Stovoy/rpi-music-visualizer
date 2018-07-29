@@ -25,21 +25,20 @@ impl LedDiskEmulatorScreen {
         }
     }
 
-    fn generate_vertex_data(&self, pixel_colors: [u8; 3 * NUM_PIXELS]) -> [f32; FLOATS_PER_PIXEL * NUM_PIXELS] {
+    fn generate_vertex_data(&self, pixel_colors: [(u8, u8, u8); NUM_PIXELS]) -> [f32; FLOATS_PER_PIXEL * NUM_PIXELS] {
         let mut pixels_from_triangles: [f32; FLOATS_PER_PIXEL * NUM_PIXELS] =
             [0.0; FLOATS_PER_PIXEL * NUM_PIXELS];
-        for pixel in 0..NUM_PIXELS {
-            let (x, y) = self.mapper.get_pixel_normalized_position(pixel as u8);
+        for pixel_index in 0..NUM_PIXELS {
+            let (x, y) = self.mapper.get_pixel_normalized_position(pixel_index as u8);
 
-            let pixel_index = pixel * 3;
-            let r = pixel_colors[pixel_index] as f32 / 255.0;
-            let g = pixel_colors[pixel_index + 1] as f32 / 255.0;
-            let b = pixel_colors[pixel_index + 2] as f32 / 255.0;
+            let r = pixel_colors[pixel_index].0 as f32 / 255.0;
+            let g = pixel_colors[pixel_index].1 as f32 / 255.0;
+            let b = pixel_colors[pixel_index].2 as f32 / 255.0;
 
             // 2 triangles per pixel to form a square enclosing it.
             // Triangle 1
             // -, -
-            let mut vertex_index = pixel * FLOATS_PER_PIXEL;
+            let mut vertex_index = pixel_index * FLOATS_PER_PIXEL;
             pixels_from_triangles[(vertex_index + 0) as usize] = x;
             pixels_from_triangles[(vertex_index + 1) as usize] = y;
             pixels_from_triangles[(vertex_index + 2) as usize] = x - PIXEL_RADIUS;
@@ -210,6 +209,10 @@ impl screen::Screen for LedDiskEmulatorScreen {
             gl_try!(gl; gl.DrawArrays(gl::TRIANGLES, 0,
                 FLOATS_PER_PIXEL as i32 * NUM_PIXELS as i32));
         }
+    }
+
+    fn uses_window(&self) -> bool {
+        true
     }
 }
 

@@ -49,6 +49,7 @@ impl screen::Screen for RawScreen {
             }
         }
     }
+
     fn render_from_texture(&self, gl: &gfx::gl::Gl, _texture: u32) {
         unsafe {
             gl_try!(gl; gl.UseProgram(self.program_id));
@@ -90,6 +91,10 @@ impl screen::Screen for RawScreen {
             gl_try!(gl; gl.BindFramebuffer(gl::FRAMEBUFFER, 0));
             gl_try!(gl; gl.DrawArrays(gl::TRIANGLES, 0, 2 * 6));
         }
+    }
+
+    fn uses_window(&self) -> bool {
+        true
     }
 }
 

@@ -26,18 +26,26 @@ macro_rules! gl_try {
     }}
 }
 
-pub fn run(
-    visualizer: visualizer::Visualizer,
-    screen: Box<screen::Screen>,
-    audio_rx: mpsc::Receiver<audio::AudioFrame>,
-) {
+pub fn run(visualizer: visualizer::Visualizer,
+           screen: Box<screen::Screen>,
+           audio_rx: mpsc::Receiver<audio::AudioFrame>) {
+
+    if screen.uses_window() {
+        render_with_window(visualizer, screen, audio_rx);
+    } else {
+        render_without_window(visualizer, screen, audio_rx);
+    }
+}
+
+fn render_with_window(visualizer: visualizer::Visualizer,
+                      screen: Box<screen::Screen>,
+                      audio_rx: mpsc::Receiver<audio::AudioFrame>) {
     let mut events_loop = glutin::EventsLoop::new();
     let window = glutin::WindowBuilder::new()
         .with_title("Music Visualizer")
         .with_dimensions(1024, 1024);
     let context = glutin::ContextBuilder::new().with_vsync(true);
     let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
-
     let mut pipeline = GfxPipeline::new(load_gl_window_as_context(&gl_window), visualizer, screen);
 
     let mut running = true;
@@ -55,6 +63,22 @@ pub fn run(
 
         pipeline.update(audio_frame);
         gl_window.swap_buffers().unwrap();
+    }
+}
+
+fn render_without_window(visualizer: visualizer::Visualizer,
+                         screen: Box<screen::Screen>,
+                         audio_rx: mpsc::Receiver<audio::AudioFrame>) {
+    let window = glutin::WindowBuilder::new()
+        .with_title("Music Visualizer")
+        .with_visibility(false);
+    let context = glutin::ContextBuilder::new();
+    let gl_window = glutin::GlWindow::new(window, context, &glutin::EventsLoop::new()).unwrap();
+    let mut pipeline = GfxPipeline::new(load_gl_window_as_context(&gl_window), visualizer, screen);
+
+    loop {
+        let audio_frame = audio_rx.recv().unwrap();
+        pipeline.update(audio_frame);
     }
 }
 

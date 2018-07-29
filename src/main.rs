@@ -6,7 +6,6 @@ extern crate sphinxad_sys;
 extern crate sysfs_gpio;
 
 use argparse::{ArgumentParser, Store, StoreTrue};
-use screen::ScreenType;
 use std::sync::mpsc;
 use std::thread;
 
@@ -23,6 +22,7 @@ mod visualizer;
 fn main() {
     let mut raw = false;
     let mut selected_visualizer = "".to_string();
+    let mut selected_screen = "".to_string();
     {
         let mut parser = ArgumentParser::new();
         parser.set_description("LED Music Visualizer");
@@ -32,6 +32,9 @@ fn main() {
         parser.refer(&mut selected_visualizer)
               .add_option(&["-v", "--visualizer"], Store,
                           "Which visualizer to use.");
+        parser.refer(&mut selected_screen)
+              .add_option(&["-s", "--screen"], Store,
+                          "Which screen to use.");
         parser.parse_args_or_exit();
     }
 
@@ -41,14 +44,7 @@ fn main() {
         listen::visualize_microphone(audio_tx);
     });
 
-    let screen_type;
-    if raw {
-        screen_type = ScreenType::Raw;
-    } else {
-        screen_type = ScreenType::LedDiskEmulator;
-    }
-
     let visualizer = visualizer::Visualizer::new(selected_visualizer);
-    let screen = screen::create_screen(screen_type);
+    let screen = screen::create_screen(selected_screen);
     gfx::run(visualizer, screen, audio_rx);
 }
