@@ -13,16 +13,20 @@ pub struct Visualizer {
 
     power_circles_visualizer: PowerCirclesVisualizer,
     tunnel_visualizer: TunnelVisualizer,
+
+    selected_visualizer: String,
 }
 
 impl Visualizer {
-    pub fn new() -> Visualizer {
+    pub fn new(selected_visualizer: String) -> Visualizer {
         Visualizer {
             framebuffer_id: 0,
             texture_id: 0,
 
             power_circles_visualizer: PowerCirclesVisualizer::new(),
             tunnel_visualizer: TunnelVisualizer::new(),
+
+            selected_visualizer,
         }
     }
 
@@ -71,11 +75,11 @@ impl Visualizer {
     }
 
     pub fn render_to_texture(&self, gl: &gfx::gl::Gl) -> u32 {
-        let current_visualizer = 1;
-        match current_visualizer {
-            0 => self.power_circles_visualizer.render_to_texture(gl),
-            1 => self.tunnel_visualizer.render_to_texture(gl),
-            _ => (),
+        match self.selected_visualizer.as_ref() {
+            "power_circles" => self.power_circles_visualizer.render_to_texture(gl),
+            "tunnel" => self.tunnel_visualizer.render_to_texture(gl),
+
+            _ => self.power_circles_visualizer.render_to_texture(gl),
         }
 
         self.texture_id

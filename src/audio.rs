@@ -47,6 +47,7 @@ pub fn to_amplitude(input: Vec<Complex<f32>>) -> Vec<f32> {
         let im = input[i].im;
         // TODO: Fix normalization.
         output[i] = (re * re + im * im).sqrt() / input.len() as f32;
+        output[i] *= 4.0;
     }
 
     output

@@ -1,9 +1,8 @@
 extern crate argparse;
-extern crate ears;
 extern crate gl;
 extern crate glutin;
-extern crate lewton;
 extern crate rustfft;
+extern crate sphinxad_sys;
 extern crate sysfs_gpio;
 
 use argparse::{ArgumentParser, Store, StoreTrue};
@@ -18,42 +17,38 @@ mod audio;
 mod led_mapper;
 mod listen;
 mod rpio;
-mod music;
 mod screen;
 mod visualizer;
 
 fn main() {
-    let mut ogg_file_name = "".to_string();
     let mut raw = false;
-    let mut use_sound = false;
+    let mut selected_visualizer = "".to_string();
     {
         let mut parser = ArgumentParser::new();
         parser.set_description("LED Music Visualizer");
-        parser.refer(&mut ogg_file_name)
-              .add_argument("ogg_file_name", Store,
-                            "Name of ogg file in music/ folder to visualize.")
-              .required();
         parser.refer(&mut raw)
               .add_option(&["-r", "--raw"], StoreTrue,
                           "Display raw texture before mapping to LEDs.");
-        parser.refer(&mut use_sound)
-              .add_option(&["-s", "--sound"], StoreTrue,
-                          "Play the ogg file to the speakers.");
+        parser.refer(&mut selected_visualizer)
+              .add_option(&["-v", "--visualizer"], Store,
+                          "Which visualizer to use.");
         parser.parse_args_or_exit();
     }
 
-    let (audio_tx, audio_rx) = mpsc::channel::<audio::AudioFrame>();
+    let (audio_tx, audio_rx) = mpsc::sync_channel::<audio::AudioFrame>(1);
 
     thread::spawn(move || {
-        listen::visualize_ogg(ogg_file_name, use_sound, audio_tx);
+        listen::visualize_microphone(audio_tx);
     });
 
-    let mut screen_type = ScreenType::LedDiskEmulator;
+    let screen_type;
     if raw {
         screen_type = ScreenType::Raw;
+    } else {
+        screen_type = ScreenType::LedDiskEmulator;
     }
 
-    let visualizer = visualizer::Visualizer::new();
+    let visualizer = visualizer::Visualizer::new(selected_visualizer);
     let screen = screen::create_screen(screen_type);
     gfx::run(visualizer, screen, audio_rx);
 }

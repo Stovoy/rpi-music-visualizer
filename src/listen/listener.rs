@@ -1,45 +1,50 @@
-use std::sync::mpsc;
-use std::time::{Duration, Instant};
-use std::cmp;
-use std::thread::sleep;
-
-use ears::{AudioController, Sound};
-
 use audio;
-use music;
+use sphinxad_sys::{ad_open_sps, ad_read, ad_start_rec};
+use std::cmp;
+use std::sync::mpsc;
 
-pub fn visualize_ogg(ogg_file_name: String, use_sound: bool, tx: mpsc::Sender<audio::AudioFrame>) {
-    println!("Parsing {}...", ogg_file_name.clone());
 
-    let ogg_file_path = format!("music/{}", ogg_file_name);
-    let (samples, duration_seconds) = music::read_ogg_file(ogg_file_path.clone());
-
-    // Play the song audio.
-    println!("Playing {}...", ogg_file_name.clone());
-    let mut sound = Sound::new(&ogg_file_path).unwrap();
-
-    if use_sound {
-        sound.play();
+pub fn visualize_microphone(tx: mpsc::SyncSender<audio::AudioFrame>) {
+    let samples_per_second = 22050;
+    let ad = unsafe { ad_open_sps(samples_per_second) };
+    let rec_successful = unsafe { ad_start_rec(ad) } == 0;
+    if !rec_successful {
+        panic!("Could not start recording microphone.");
     }
 
-    let samples_per_sec = (samples.len() as f32 / duration_seconds).ceil();
+    loop {
+        let mut buffer = vec![0; 22050];
+        let raw_buffer = buffer.as_mut_ptr();
+        let sample_count = unsafe { ad_read(ad, raw_buffer, 22050) };
+        let duration_seconds = sample_count as f32 / samples_per_second as f32;
 
-    let window_size_sec = 0.02;
-    let window_duration = Duration::from_millis((window_size_sec * 1000.0) as u64);
+        let mut samples = Vec::new();
+        for i in 0..sample_count as usize {
+            let sample_value = buffer[i] as f32 / i16::max_value() as f32;
+            let clamped_value = f32::max(-1.0, f32::min(1.0, sample_value));
+            samples.push(clamped_value);
+        }
+
+        visualize_samples(samples, sample_count as usize, duration_seconds, &tx);
+    }
+}
+
+fn visualize_samples(samples: Vec<f32>, length: usize, duration_seconds: f32, tx: &mpsc::SyncSender<audio::AudioFrame>) {
+    let samples_per_sec = (length as f32 / duration_seconds).ceil();
+
+    let window_size_sec = 0.05;
     let window_size_samples = (samples_per_sec * window_size_sec).ceil();
 
-    let frequency_bins = audio::frequency_bins(samples_per_sec as u32, window_size_samples as u32);
-
     let mut window_start: usize = 0;
-    let mut current_time = Duration::new(0, 0);
-    let mut time_drift_offset_samples: usize = 0;
-    while window_start < samples.len() {
-        let start = Instant::now();
-
+    while window_start < length {
         let window_end = cmp::min(
-            window_start + window_size_samples as usize + time_drift_offset_samples,
-            samples.len() - 1,
+            window_start + window_size_samples as usize,
+            length - 1,
         );
+
+        let frequency_bins = audio::frequency_bins(
+            samples_per_sec as u32,
+            (window_end - window_start) as u32);
 
         let fft_output = audio::compute_fft(samples[window_start..window_end].to_vec());
         let amplitudes = audio::to_amplitude(fft_output);
@@ -47,9 +52,11 @@ pub fn visualize_ogg(ogg_file_name: String, use_sound: bool, tx: mpsc::Sender<au
         let low_threshold_hz = 1000.0;
         let mid_threshold_hz = 6000.0;
         let high_threshold_hz = 20000.0;
+
         let mut low_power = 0.0;
         let mut mid_power = 0.0;
         let mut high_power = 0.0;
+
         for i in 0..frequency_bins.len() {
             if frequency_bins[i] <= low_threshold_hz {
                 low_power += amplitudes[i];
@@ -68,15 +75,9 @@ pub fn visualize_ogg(ogg_file_name: String, use_sound: bool, tx: mpsc::Sender<au
             mid_power,
             high_power,
         };
+
         tx.send(audio_frame).unwrap();
 
-        sleep(window_duration);
         window_start = window_end + 1;
-
-        let elapsed = start.elapsed();
-        current_time += elapsed;
-        time_drift_offset_samples = (samples_per_sec
-            * ((elapsed - window_duration).subsec_nanos() as f32 / 1000000000.0))
-            as usize;
     }
 }
