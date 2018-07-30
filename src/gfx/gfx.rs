@@ -50,7 +50,10 @@ fn render_with_window(visualizer: visualizer::Visualizer,
 
     let mut running = true;
     while running {
-        let audio_frame = audio_rx.recv().unwrap();
+        let audio_frame = match audio_rx.recv() {
+            Ok(x) => x,
+            Err(error) => continue,
+        };
 
         events_loop.poll_events(|event| match event {
             glutin::Event::WindowEvent { event, .. } => match event {
@@ -74,10 +77,15 @@ fn render_without_window(visualizer: visualizer::Visualizer,
         .with_visibility(false);
     let context = glutin::ContextBuilder::new();
     let gl_window = glutin::GlWindow::new(window, context, &glutin::EventsLoop::new()).unwrap();
-    let mut pipeline = GfxPipeline::new(load_gl_window_as_context(&gl_window), visualizer, screen);
+    let mut pipeline = GfxPipeline::new(load_gl_window_as_context(&gl_window),
+                                        visualizer, screen);
 
     loop {
-        let audio_frame = audio_rx.recv().unwrap();
+        let audio_frame = match audio_rx.recv() {
+            Ok(x) => x,
+            Err(error) => continue,
+        };
+
         pipeline.update(audio_frame);
     }
 }

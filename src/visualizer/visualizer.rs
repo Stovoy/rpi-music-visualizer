@@ -1,9 +1,9 @@
-use std::ptr;
-use std::mem;
-
 use audio;
 use gfx;
 use gfx::gl;
+use std::mem;
+use std::ptr;
+use visualizer::equalizer::EqualizerVisualizer;
 use visualizer::power_circles::PowerCirclesVisualizer;
 use visualizer::tunnel::TunnelVisualizer;
 
@@ -11,6 +11,7 @@ pub struct Visualizer {
     framebuffer_id: u32,
     texture_id: u32,
 
+    equalizer_visualizer: EqualizerVisualizer,
     power_circles_visualizer: PowerCirclesVisualizer,
     tunnel_visualizer: TunnelVisualizer,
 
@@ -23,6 +24,7 @@ impl Visualizer {
             framebuffer_id: 0,
             texture_id: 0,
 
+            equalizer_visualizer: EqualizerVisualizer::new(),
             power_circles_visualizer: PowerCirclesVisualizer::new(),
             tunnel_visualizer: TunnelVisualizer::new(),
 
@@ -64,18 +66,21 @@ impl Visualizer {
 
             self.framebuffer_id = framebuffer;
 
+            self.equalizer_visualizer.setup(gl, self.framebuffer_id);
             self.power_circles_visualizer.setup(gl, self.framebuffer_id);
             self.tunnel_visualizer.setup(gl, self.framebuffer_id);
         }
     }
 
     pub fn update(&mut self, audio_frame: audio::AudioFrame) {
+        self.equalizer_visualizer.update(audio_frame.clone());
         self.power_circles_visualizer.update(audio_frame.clone());
         self.tunnel_visualizer.update(audio_frame.clone());
     }
 
     pub fn render_to_texture(&self, gl: &gfx::gl::Gl) -> u32 {
         match self.selected_visualizer.as_ref() {
+            "equalizer" => self.equalizer_visualizer.render_to_texture(gl),
             "power_circles" => self.power_circles_visualizer.render_to_texture(gl),
             "tunnel" => self.tunnel_visualizer.render_to_texture(gl),
 

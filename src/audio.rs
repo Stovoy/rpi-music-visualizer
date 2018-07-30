@@ -42,12 +42,13 @@ pub fn frequency_bins(sample_rate: u32, sample_count: u32) -> Vec<f32> {
 pub fn to_amplitude(input: Vec<Complex<f32>>) -> Vec<f32> {
     let mut output: Vec<f32> = vec![0.0; input.len()];
 
+    // TODO: Dynamic scaling? Potentiometer?
+    let scale_factor = 16.0;
     for i in 0..input.len() {
         let re = input[i].re;
         let im = input[i].im;
-        // TODO: Fix normalization.
         output[i] = (re * re + im * im).sqrt() / input.len() as f32;
-        output[i] *= 4.0;
+        output[i] *= scale_factor;
     }
 
     output
@@ -56,7 +57,9 @@ pub fn to_amplitude(input: Vec<Complex<f32>>) -> Vec<f32> {
 
 #[derive(Clone)]
 pub struct AudioFrame {
+    pub bpm: f32,
     pub low_power: f32,
     pub mid_power: f32,
     pub high_power: f32,
+    pub hundred_hz_buckets: [f32; 200],
 }

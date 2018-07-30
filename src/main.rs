@@ -20,15 +20,11 @@ mod screen;
 mod visualizer;
 
 fn main() {
-    let mut raw = false;
     let mut selected_visualizer = "".to_string();
     let mut selected_screen = "".to_string();
     {
         let mut parser = ArgumentParser::new();
         parser.set_description("LED Music Visualizer");
-        parser.refer(&mut raw)
-              .add_option(&["-r", "--raw"], StoreTrue,
-                          "Display raw texture before mapping to LEDs.");
         parser.refer(&mut selected_visualizer)
               .add_option(&["-v", "--visualizer"], Store,
                           "Which visualizer to use.");
