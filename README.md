@@ -7,7 +7,7 @@ Raspberry Pi Music Visualizer written in Rust
 
 [ ] Plug in LEDs
 
-[ ] LED communication
+[x] LED communication
 
 [ ] Battery setup
 
