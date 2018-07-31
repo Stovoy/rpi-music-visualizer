@@ -18,3 +18,6 @@ Raspberry Pi Music Visualizer written in Rust
 [ ] Improve visualizer data quality
 
 [ ] More visualizers
+
+## Visualizer Ideas:
+* Lip-syncing Smiley Face visualizer
