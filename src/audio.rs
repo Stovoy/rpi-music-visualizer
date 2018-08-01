@@ -43,7 +43,7 @@ pub fn to_amplitude(input: Vec<Complex<f32>>) -> Vec<f32> {
     let mut output: Vec<f32> = vec![0.0; input.len()];
 
     // TODO: Dynamic scaling? Potentiometer?
-    let scale_factor = 16.0;
+    let scale_factor = 32.0;
     for i in 0..input.len() {
         let re = input[i].re;
         let im = input[i].im;

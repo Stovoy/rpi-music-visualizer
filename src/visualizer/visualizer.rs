@@ -5,6 +5,7 @@ use std::mem;
 use std::ptr;
 use visualizer::equalizer::EqualizerVisualizer;
 use visualizer::power_circles::PowerCirclesVisualizer;
+use visualizer::smiley::SmileyVisualizer;
 use visualizer::tunnel::TunnelVisualizer;
 
 pub struct Visualizer {
@@ -13,6 +14,7 @@ pub struct Visualizer {
 
     equalizer_visualizer: EqualizerVisualizer,
     power_circles_visualizer: PowerCirclesVisualizer,
+    smiley_visualizer: SmileyVisualizer,
     tunnel_visualizer: TunnelVisualizer,
 
     selected_visualizer: String,
@@ -26,6 +28,7 @@ impl Visualizer {
 
             equalizer_visualizer: EqualizerVisualizer::new(),
             power_circles_visualizer: PowerCirclesVisualizer::new(),
+            smiley_visualizer: SmileyVisualizer::new(),
             tunnel_visualizer: TunnelVisualizer::new(),
 
             selected_visualizer,
@@ -68,6 +71,7 @@ impl Visualizer {
 
             self.equalizer_visualizer.setup(gl, self.framebuffer_id);
             self.power_circles_visualizer.setup(gl, self.framebuffer_id);
+            self.smiley_visualizer.setup(gl, self.framebuffer_id);
             self.tunnel_visualizer.setup(gl, self.framebuffer_id);
         }
     }
@@ -75,6 +79,7 @@ impl Visualizer {
     pub fn update(&mut self, audio_frame: audio::AudioFrame) {
         self.equalizer_visualizer.update(audio_frame.clone());
         self.power_circles_visualizer.update(audio_frame.clone());
+        self.smiley_visualizer.update(audio_frame.clone());
         self.tunnel_visualizer.update(audio_frame.clone());
     }
 
@@ -82,6 +87,7 @@ impl Visualizer {
         match self.selected_visualizer.as_ref() {
             "equalizer" => self.equalizer_visualizer.render_to_texture(gl),
             "power_circles" => self.power_circles_visualizer.render_to_texture(gl),
+            "smiley" => self.smiley_visualizer.render_to_texture(gl),
             "tunnel" => self.tunnel_visualizer.render_to_texture(gl),
 
             _ => self.power_circles_visualizer.render_to_texture(gl),
