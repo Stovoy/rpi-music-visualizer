@@ -34,6 +34,7 @@ pub fn send_binary(pin_number: u64, binary: Vec<u8>) {
     }
 
     // TODO: Actually enable.
+    println!("{:?}", bits);
     return;
     pin.set_direction(Direction::Out).unwrap();
     pin.with_exported(|| {

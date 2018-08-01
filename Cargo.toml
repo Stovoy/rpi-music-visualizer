@@ -10,6 +10,7 @@ gl = "0.10"
 glutin = "0.13"
 rustfft = "2.0.0"
 sphinxad-sys = "0.1.3"
+rand = "*"
 
 [build-dependencies]
 gl_generator = "0.9"

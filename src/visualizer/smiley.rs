@@ -6,8 +6,6 @@ use std::ptr;
 
 const NUM_SQUARES: usize = 1;
 const NUM_VERTICIES_PER_SQUARE: usize = 6;
-const NUM_ATTRIBUTES_PER_VERTEX: usize = 3;
-const NUM_FLOATS: usize = NUM_SQUARES * NUM_VERTICIES_PER_SQUARE * NUM_ATTRIBUTES_PER_VERTEX;
 
 pub struct SmileyVisualizer {
     program_id: u32,
@@ -42,7 +40,7 @@ impl SmileyVisualizer {
                 let mut max_length = mem::uninitialized();
                 gl_try!(gl; gl.GetShaderiv(vs, gl::INFO_LOG_LENGTH, &mut max_length));
 
-                let mut info_log = vec![0 as i8; max_length as usize];
+                let mut info_log = vec![0; max_length as usize];
                 gl_try!(gl; gl.GetShaderInfoLog(vs, max_length, &mut max_length, info_log.as_mut_ptr()));
 
                 for info_char in info_log.iter() {
@@ -61,7 +59,7 @@ impl SmileyVisualizer {
                 let mut max_length = mem::uninitialized();
                 gl_try!(gl; gl.GetShaderiv(fs, gl::INFO_LOG_LENGTH, &mut max_length));
 
-                let mut info_log = vec![0 as i8; max_length as usize];
+                let mut info_log = vec![0; max_length as usize];
                 gl_try!(gl; gl.GetShaderInfoLog(fs, max_length, &mut max_length, info_log.as_mut_ptr()));
 
                 for info_char in info_log.iter() {
@@ -83,7 +81,7 @@ impl SmileyVisualizer {
                 let mut max_length = mem::uninitialized();
                 gl_try!(gl; gl.GetProgramiv(program, gl::INFO_LOG_LENGTH, &mut max_length));
 
-                let mut info_log = vec![0 as i8; max_length as usize];
+                let mut info_log = vec![0; max_length as usize];
                 gl_try!(gl; gl.GetProgramInfoLog(program, max_length, &mut max_length, info_log.as_mut_ptr()));
 
                 for info_char in info_log.iter() {

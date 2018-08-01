@@ -29,7 +29,6 @@ macro_rules! gl_try {
 pub fn run(visualizer: visualizer::Visualizer,
            screen: Box<screen::Screen>,
            audio_rx: mpsc::Receiver<audio::AudioFrame>) {
-
     if screen.uses_window() {
         render_with_window(visualizer, screen, audio_rx);
     } else {
@@ -77,6 +76,7 @@ fn render_without_window(visualizer: visualizer::Visualizer,
         .with_visibility(false);
     let context = glutin::ContextBuilder::new();
     let gl_window = glutin::GlWindow::new(window, context, &glutin::EventsLoop::new()).unwrap();
+
     let mut pipeline = GfxPipeline::new(load_gl_window_as_context(&gl_window),
                                         visualizer, screen);
 

@@ -1,7 +1,9 @@
 use audio;
 use sphinxad_sys::{ad_open_sps, ad_read, ad_start_rec};
-use std::cmp;
+use rand::prelude::*;
 use std::sync::mpsc;
+use std::thread;
+use std::time;
 
 
 pub fn visualize_microphone(tx: mpsc::SyncSender<audio::AudioFrame>) {
@@ -34,6 +36,37 @@ pub fn visualize_microphone(tx: mpsc::SyncSender<audio::AudioFrame>) {
         visualize_samples(&window[0..1023].to_vec(), sample_count as usize, duration_seconds, &tx);
         window = window.split_off(1024);
     }
+}
+
+pub fn visualize_fake(tx: mpsc::SyncSender<audio::AudioFrame>) {
+	let mut rng = thread_rng();
+
+	loop {
+		let bpm = 0.0;
+
+		let low_power = rng.gen();
+		let mid_power = rng.gen();
+		let high_power = rng.gen();
+
+		let mut hundred_hz_buckets = [0.0; 200];
+		for i in 0..hundred_hz_buckets.len() {
+			hundred_hz_buckets[i] = rng.gen();
+		}
+
+		let audio_frame = audio::AudioFrame {
+			bpm,
+
+			low_power,
+			mid_power,
+			high_power,
+
+			hundred_hz_buckets,
+		};
+
+		tx.send(audio_frame).unwrap();
+
+		thread::sleep(time::Duration::from_millis(50));
+	}
 }
 
 fn visualize_samples(samples: &Vec<f32>, length: usize, duration_seconds: f32, tx: &mpsc::SyncSender<audio::AudioFrame>) {

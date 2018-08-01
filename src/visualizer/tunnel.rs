@@ -59,7 +59,7 @@ impl TunnelVisualizer {
                 let mut max_length = mem::uninitialized();
                 gl_try!(gl; gl.GetShaderiv(fs, gl::INFO_LOG_LENGTH, &mut max_length));
 
-                let mut info_log = vec![0 as i8; max_length as usize];
+                let mut info_log = vec![0; max_length as usize];
                 gl_try!(gl; gl.GetShaderInfoLog(fs, max_length, &mut max_length, info_log.as_mut_ptr()));
 
                 for info_char in info_log.iter() {
@@ -81,7 +81,7 @@ impl TunnelVisualizer {
                 let mut max_length = mem::uninitialized();
                 gl_try!(gl; gl.GetProgramiv(program, gl::INFO_LOG_LENGTH, &mut max_length));
 
-                let mut info_log = vec![0 as i8; max_length as usize];
+                let mut info_log = vec![0; max_length as usize];
                 gl_try!(gl; gl.GetProgramInfoLog(program, max_length, &mut max_length, info_log.as_mut_ptr()));
 
                 for info_char in info_log.iter() {
