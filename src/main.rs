@@ -1,3 +1,5 @@
+#![feature(extern_prelude)]
+
 extern crate argparse;
 extern crate blinkt;
 extern crate gl;
