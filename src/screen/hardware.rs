@@ -24,7 +24,7 @@ impl screen::Screen for HardwareScreen {
 
         let mut blinkt = Blinkt::with_spi(1_000_000, 255).unwrap();
         blinkt.set_clear_on_drop(false);
-        blinkt.set_all_pixels_brightness(5.0);
+        blinkt.set_all_pixels_brightness(0.08);
 
         for (i, (r, g, b)) in pixel_colors.iter().enumerate() {
             blinkt.set_pixel(i, *r, *g, *b);
