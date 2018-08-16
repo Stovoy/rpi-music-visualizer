@@ -16,10 +16,11 @@ pub mod gl {
 macro_rules! gl_try {
     ($gl:expr; $call:expr) => {{
         let result = $call;
-        // TODO: Compile away with a compile-flag.
-        let gl_err = $gl.GetError();
-        if gl_err != gl::NO_ERROR {
-            panic!("gl error: {} (0x{:X})", gl_err, gl_err);
+        if cfg!(debug_assertion) {
+            let gl_err = $gl.GetError();
+            if gl_err != gl::NO_ERROR {
+                panic!("gl error: {} (0x{:X})", gl_err, gl_err);
+            }
         }
 
         result
