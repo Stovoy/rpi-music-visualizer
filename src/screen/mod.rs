@@ -16,6 +16,6 @@ pub fn create_screen(selected_screen: String) -> Box<Screen> {
 
 pub trait Screen {
     fn setup(&mut self, gl: &gfx::gl::Gl);
-    fn render_from_texture(&self, gl: &gfx::gl::Gl, _texture: u32);
+    fn render_from_texture(&mut self, gl: &gfx::gl::Gl, _texture: u32);
     fn uses_window(&self) -> bool;
 }
