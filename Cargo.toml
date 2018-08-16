@@ -5,6 +5,7 @@ authors = ["Steve Mostovoy <stevemostovoysm@gmail.com>"]
 
 [dependencies]
 argparse = "0.2.1"
+blinkt = "0.4"
 sysfs_gpio = "0.5"
 gl = "0.10"
 glutin = "0.13"

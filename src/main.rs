@@ -1,4 +1,5 @@
 extern crate argparse;
+extern crate blinkt;
 extern crate gl;
 extern crate glutin;
 extern crate rand;
