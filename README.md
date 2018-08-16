@@ -5,13 +5,13 @@ Raspberry Pi Music Visualizer written in Rust
 
 [x] Accept microphone input
 
-[ ] Plug in LEDs
+[x] Plug in LEDs
 
 [x] LED communication
 
-[ ] Battery setup
+[x] Battery setup
 
-[ ] Wiring diagram
+[x] Wiring diagram
 
 [ ] How to wear it (Comfortably)
 
@@ -19,13 +19,10 @@ Raspberry Pi Music Visualizer written in Rust
 
 [ ] More visualizers
 
-## Visualizer Ideas:
-* Lip-syncing Smiley Face visualizer
-
-
 # How to run on Raspberry Pi
 
 mkdir /tmp/xdg
 export XDG_RUNTIME_DIR=/tmp/xdg
 
-sudo -E startx $(pwd)/target/debug/rpi-music-visualizer --visualizer smiley --fake --screen hardware
+sudo -E startx $(pwd)/target/debug/rpi-music-visualizer --visualizer power_circles --fake --screen hardware
+sudo -E startx $(pwd)/target/release/rpi-music-visualizer --visualizer power_circles --fake --screen hardware
