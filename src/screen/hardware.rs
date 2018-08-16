@@ -11,7 +11,7 @@ pub struct HardwareScreen {
 
 impl HardwareScreen {
     pub fn new() -> HardwareScreen {
-        let mut blinkt = Blinkt::with_spi(16_000_000, 144).unwrap()
+        let mut blinkt = Blinkt::with_spi(16_000_000, 144).unwrap();
         blinkt.set_all_pixels_brightness(10.0);
 
         HardwareScreen {
