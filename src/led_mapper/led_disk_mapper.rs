@@ -41,8 +41,8 @@ impl LedDiskMapper {
         unsafe {
             gl_try!(gl; gl.UseProgram(self.program_id));
 
-            let width = 1024;
-            let height = 1024;
+            let width = 128;
+            let height = 128;
             let mut pixels = vec![0 as u8; 3 * width * height];
 
             gl_try!(gl; gl.ReadPixels(

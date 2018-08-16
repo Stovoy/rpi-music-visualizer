@@ -48,7 +48,7 @@ impl Visualizer {
 
             gl_try!(gl; gl.TexImage2D(
                 gl::TEXTURE_2D, 0, gl::RGB as i32,
-                1024, 1024, 0, gl::RGB, gl::UNSIGNED_BYTE,
+                128, 128, 0, gl::RGB, gl::UNSIGNED_BYTE,
                 ptr::null(),
             ));
 

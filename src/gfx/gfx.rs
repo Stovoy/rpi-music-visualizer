@@ -43,7 +43,7 @@ fn render_with_window(visualizer: visualizer::Visualizer,
     let mut events_loop = glutin::EventsLoop::new();
     let window = glutin::WindowBuilder::new()
         .with_title("Music Visualizer")
-        .with_dimensions(1024, 1024);
+        .with_dimensions(128, 128);
     let context = glutin::ContextBuilder::new().with_vsync(true);
     let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
     let mut pipeline = GfxPipeline::new(load_gl_window_as_context(&gl_window), visualizer, screen);
@@ -137,10 +137,10 @@ impl GfxPipeline {
             gl_try!(gl; gl.ClearColor(0.0, 0.0, 0.0, 1.0));
             gl_try!(gl; gl.Clear(gl::COLOR_BUFFER_BIT));
 
-            gl_try!(gl; gl.Viewport(0, 0, 1024, 1024));
+            gl_try!(gl; gl.Viewport(0, 0, 128, 128));
             let texture = self.visualizer.render_to_texture(gl);
             // TODO: Scale based on display size (pixel density / resolution mismatch).
-            gl_try!(gl; gl.Viewport(0, 0, 1024, 1024));
+            gl_try!(gl; gl.Viewport(0, 0, 128, 128));
             self.screen.render_from_texture(gl, texture);
         }
     }
