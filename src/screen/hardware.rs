@@ -6,7 +6,7 @@ use screen;
 
 pub struct HardwareScreen {
     mapper: led_mapper::LedDiskMapper,
-    blinkt: blink::Blinkt,
+    blinkt: blinkt::Blinkt,
 }
 
 impl HardwareScreen {
