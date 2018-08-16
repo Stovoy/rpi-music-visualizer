@@ -21,3 +21,11 @@ Raspberry Pi Music Visualizer written in Rust
 
 ## Visualizer Ideas:
 * Lip-syncing Smiley Face visualizer
+
+
+# How to run on Raspberry Pi
+
+mkdir /tmp/xdg
+export XDG_RUNTIME_DIR=/tmp/xdg
+
+sudo -E startx $(pwd)/target/debug/rpi-music-visualizer --visualizer smiley --fake --screen hardware

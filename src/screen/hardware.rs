@@ -27,9 +27,7 @@ impl screen::Screen for HardwareScreen {
     fn render_from_texture(&self, gl: &gfx::gl::Gl, texture: u32) {
         let pixel_colors = self.mapper.map_from_texture(gl, texture);
 
-        self.blinkt.set_all_pixels(*red, *green, *blue);
-
-        for (i, (r, g, b)) in pixel_colors.enumerate() {
+        for (i, (r, g, b)) in pixel_colors.iter().enumerate() {
             self.blinkt.set_pixel(i, *r, *g, *b);
         }
 
