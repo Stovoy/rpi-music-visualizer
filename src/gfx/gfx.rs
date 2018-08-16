@@ -51,7 +51,7 @@ fn render_with_window(visualizer: visualizer::Visualizer,
     while running {
         let audio_frame = match audio_rx.recv() {
             Ok(x) => x,
-            Err(error) => continue,
+            Err(_) => continue,
         };
 
         events_loop.poll_events(|event| match event {
@@ -83,7 +83,7 @@ fn render_without_window(visualizer: visualizer::Visualizer,
     loop {
         let audio_frame = match audio_rx.recv() {
             Ok(x) => x,
-            Err(error) => continue,
+            Err(_) => continue,
         };
 
         pipeline.update(audio_frame);
