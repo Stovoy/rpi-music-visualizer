@@ -7,12 +7,12 @@ use std::thread;
 
 pub struct HardwareScreen {
     mapper: led_mapper::LedDiskMapper,
-    pixels_tx: mpsc::SyncSender<[(u8, u8, u8); led_mapper::LedDiskMapper::NUM_PIXELS]>,
+    pixels_tx: mpsc::SyncSender<[(u8, u8, u8); led_mapper::led_disk_mapper::NUM_PIXELS]>,
 }
 
 impl HardwareScreen {
     pub fn new() -> HardwareScreen {
-        let (pixels_tx, pixels_rx) = mpsc::sync_channel::<[(u8, u8, u8); led_mapper::LedDiskMapper::NUM_PIXELS]>(1);
+        let (pixels_tx, pixels_rx) = mpsc::sync_channel::<[(u8, u8, u8); led_mapper::led_disk_mapper::NUM_PIXELS]>(1);
 
         thread::spawn(move || {
             blinkt_pipeline(pixels_rx);
@@ -39,7 +39,7 @@ impl screen::Screen for HardwareScreen {
     }
 }
 
-fn blinkt_pipeline(pixels_rx: mpsc::Receiver<[(u8, u8, u8); led_mapper::LedDiskMapper::NUM_PIXELS]>) {
+fn blinkt_pipeline(pixels_rx: mpsc::Receiver<[(u8, u8, u8); led_mapper::led_disk_mapper::NUM_PIXELS]>) {
     let mut blinkt = Blinkt::with_spi(1_000_000, 255).unwrap();
     blinkt.set_all_pixels_brightness(0.08);
 
