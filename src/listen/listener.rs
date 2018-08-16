@@ -65,7 +65,7 @@ pub fn visualize_fake(tx: mpsc::SyncSender<audio::AudioFrame>) {
 
 		tx.send(audio_frame).unwrap();
 
-		thread::sleep(time::Duration::from_millis(50));
+		thread::sleep(time::Duration::from_millis(16));
 	}
 }
 
