@@ -125,11 +125,9 @@ impl SmileyVisualizer {
                 gl::STATIC_DRAW,
             ));
 
-            if gl_try!(gl; gl.BindVertexArray.is_loaded()) {
-                let mut vao = mem::uninitialized();
-                gl_try!(gl; gl.GenVertexArrays(1, &mut vao));
-                gl_try!(gl; gl.BindVertexArray(vao));
-            }
+            let mut vao = mem::uninitialized();
+            gl_try!(gl; gl.GenVertexArrays(1, &mut vao));
+            gl_try!(gl; gl.BindVertexArray(vao));
 
             let pos_attrib = gl_try!(gl; gl.GetAttribLocation(self.program_id, b"position\0".as_ptr() as *const _));
             gl_try!(gl; gl.VertexAttribPointer(
