@@ -1,12 +1,11 @@
-use std::ptr;
-use std::mem;
-
 use audio;
 use gfx;
 use gfx::gl;
+use std::mem;
+use std::ptr;
 
-const NUM_SQUARES: usize  = 4;
-const NUM_VERTICIES_PER_SQUARE: usize  = 6;
+const NUM_SQUARES: usize = 4;
+const NUM_VERTICIES_PER_SQUARE: usize = 6;
 const NUM_ATTRIBUTES_PER_VERTEX: usize = 7;
 const NUM_FLOATS: usize = NUM_SQUARES * NUM_VERTICIES_PER_SQUARE * NUM_ATTRIBUTES_PER_VERTEX;
 
@@ -121,6 +120,9 @@ impl PowerCirclesVisualizer {
             gl_try!(gl; gl.BindFramebuffer(gl::FRAMEBUFFER, self.framebuffer_id));
             gl_try!(gl; gl.DrawBuffers(1, [gl::COLOR_ATTACHMENT0].as_ptr()));
             gl_try!(gl; gl.DrawArrays(gl::TRIANGLES, 0, 6 * 4));
+
+            gl_try!(gl; gl.DeleteBuffers(1, &vb));
+            gl_try!(gl; gl.DeleteVertexArrays(1, &vao));
         }
     }
 }

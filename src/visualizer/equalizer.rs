@@ -163,6 +163,9 @@ impl EqualizerVisualizer {
 
             gl_try!(gl; gl.DrawArrays(gl::TRIANGLES, 0,
                 (NUM_SQUARES * NUM_VERTICIES_PER_SQUARE) as i32));
+
+            gl_try!(gl; gl.DeleteBuffers(1, &vb));
+            gl_try!(gl; gl.DeleteVertexArrays(1, &vao));
         }
     }
 }
@@ -191,7 +194,7 @@ fn generate_vertex_data(audio_frame: audio::AudioFrame) -> Vec<f32> {
     let mut vertex_data = Vec::with_capacity(NUM_FLOATS);
 
     let add_square = |vertex_data: &mut Vec<f32>,
-                          size: f32, color: (f32, f32, f32), amplitude: f32| {
+                      size: f32, color: (f32, f32, f32), amplitude: f32| {
         vertex_data.extend_from_slice(&[
             -size, -size, color.0, color.1, color.2, size, amplitude,
             -size, size, color.0, color.1, color.2, size, amplitude,

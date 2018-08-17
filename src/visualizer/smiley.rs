@@ -154,6 +154,9 @@ impl SmileyVisualizer {
 
             gl_try!(gl; gl.DrawArrays(gl::TRIANGLES, 0,
                 (NUM_SQUARES * NUM_VERTICIES_PER_SQUARE) as i32));
+
+            gl_try!(gl; gl.DeleteBuffers(1, &vb));
+            gl_try!(gl; gl.DeleteVertexArrays(1, &vao));
         }
     }
 }

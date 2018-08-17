@@ -1,9 +1,8 @@
-use std::mem;
-use std::ptr;
-
-use screen;
 use gfx;
 use gfx::gl;
+use screen;
+use std::mem;
+use std::ptr;
 
 pub struct RawScreen {
     program_id: u32,
@@ -90,6 +89,9 @@ impl screen::Screen for RawScreen {
 
             gl_try!(gl; gl.BindFramebuffer(gl::FRAMEBUFFER, 0));
             gl_try!(gl; gl.DrawArrays(gl::TRIANGLES, 0, 2 * 6));
+
+            gl_try!(gl; gl.DeleteBuffers(1, &vb));
+            gl_try!(gl; gl.DeleteVertexArrays(1, &vao));
         }
     }
 

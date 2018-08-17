@@ -208,6 +208,8 @@ impl screen::Screen for LedDiskEmulatorScreen {
 
             gl_try!(gl; gl.DrawArrays(gl::TRIANGLES, 0,
                 FLOATS_PER_PIXEL as i32 * NUM_PIXELS as i32));
+
+            gl_try!(gl; gl.DeleteBuffers(1, &vb));gl_try!(gl; gl.DeleteVertexArrays(1, &vao));
         }
     }
 

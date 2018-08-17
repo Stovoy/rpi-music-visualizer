@@ -24,5 +24,5 @@ Raspberry Pi Music Visualizer written in Rust
 mkdir /tmp/xdg
 export XDG_RUNTIME_DIR=/tmp/xdg
 
-sudo -E startx $(pwd)/target/debug/rpi-music-visualizer --visualizer power_circles --fake --screen hardware
-sudo -E startx $(pwd)/target/release/rpi-music-visualizer --visualizer power_circles --fake --screen hardware
+sudo -E startx $(pwd)/target/debug/rpi-music-visualizer --visualizer equalizer --fake --screen hardware
+sudo -E startx $(pwd)/target/release/rpi-music-visualizer --visualizer equalizer --fake --screen hardware
