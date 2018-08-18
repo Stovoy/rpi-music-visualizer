@@ -1,13 +1,12 @@
-use std::f32;
-use std::mem;
-use std::ptr;
+use gfx;
 use gl;
-
 use led_mapper;
 use led_mapper::led_disk_mapper::NUM_PIXELS;
 use led_mapper::led_disk_mapper::PIXEL_RADIUS;
 use screen;
-use gfx;
+use std::f32;
+use std::mem;
+use std::ptr;
 
 pub struct LedDiskEmulatorScreen {
     program_id: u32,
@@ -207,7 +206,8 @@ impl screen::Screen for LedDiskEmulatorScreen {
             gl_try!(gl; gl.DrawArrays(gl::TRIANGLES, 0,
                 FLOATS_PER_PIXEL as i32 * NUM_PIXELS as i32));
 
-            gl_try!(gl; gl.DeleteBuffers(1, &vb));gl_try!(gl; gl.DeleteVertexArrays(1, &vao));
+            gl_try!(gl; gl.DeleteBuffers(1, &vb));
+            gl_try!(gl; gl.DeleteVertexArrays(1, &vao));
         }
     }
 
