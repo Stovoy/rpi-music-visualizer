@@ -29,24 +29,26 @@ macro_rules! gl_try {
 
 pub fn run(visualizer: visualizer::Visualizer,
            screen: Box<screen::Screen>,
-           audio_rx: mpsc::Receiver<audio::AudioFrame>) {
+           audio_rx: mpsc::Receiver<audio::AudioFrame>,
+           size: i32) {
     if screen.uses_window() {
-        render_with_window(visualizer, screen, audio_rx);
+        render_with_window(visualizer, screen, audio_rx, size);
     } else {
-        render_without_window(visualizer, screen, audio_rx);
+        render_without_window(visualizer, screen, audio_rx, size);
     }
 }
 
 fn render_with_window(visualizer: visualizer::Visualizer,
                       screen: Box<screen::Screen>,
-                      audio_rx: mpsc::Receiver<audio::AudioFrame>) {
+                      audio_rx: mpsc::Receiver<audio::AudioFrame>,
+                      size: i32) {
     let mut events_loop = glutin::EventsLoop::new();
     let window = glutin::WindowBuilder::new()
         .with_title("Music Visualizer")
-        .with_dimensions(128, 128);
+        .with_dimensions(size as u32, size as u32);
     let context = glutin::ContextBuilder::new().with_vsync(true);
     let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
-    let mut pipeline = GfxPipeline::new(load_gl_window_as_context(&gl_window), visualizer, screen);
+    let mut pipeline = GfxPipeline::new(load_gl_window_as_context(&gl_window), visualizer, screen, size);
 
     let mut running = true;
     while running {
@@ -71,7 +73,8 @@ fn render_with_window(visualizer: visualizer::Visualizer,
 
 fn render_without_window(visualizer: visualizer::Visualizer,
                          screen: Box<screen::Screen>,
-                         audio_rx: mpsc::Receiver<audio::AudioFrame>) {
+                         audio_rx: mpsc::Receiver<audio::AudioFrame>,
+                         size: i32) {
     let window = glutin::WindowBuilder::new()
         .with_title("Music Visualizer")
         .with_visibility(false);
@@ -79,7 +82,7 @@ fn render_without_window(visualizer: visualizer::Visualizer,
     let gl_window = glutin::GlWindow::new(window, context, &glutin::EventsLoop::new()).unwrap();
 
     let mut pipeline = GfxPipeline::new(load_gl_window_as_context(&gl_window),
-                                        visualizer, screen);
+                                        visualizer, screen, size);
 
     loop {
         let audio_frame = match audio_rx.recv() {
@@ -109,6 +112,7 @@ pub struct GfxPipeline {
     gl: gl::Gl,
     visualizer: visualizer::Visualizer,
     screen: Box<screen::Screen>,
+    size: i32,
 }
 
 impl GfxPipeline {
@@ -116,14 +120,16 @@ impl GfxPipeline {
         gl: gl::Gl,
         mut visualizer: visualizer::Visualizer,
         mut screen: Box<screen::Screen>,
+        size: i32,
     ) -> GfxPipeline {
-        visualizer.setup(&gl);
+        visualizer.setup(&gl, size);
         screen.setup(&gl);
 
         let pipeline = GfxPipeline {
             gl,
             visualizer,
             screen,
+            size,
         };
 
         pipeline
@@ -137,11 +143,10 @@ impl GfxPipeline {
             gl_try!(gl; gl.ClearColor(0.0, 0.0, 0.0, 1.0));
             gl_try!(gl; gl.Clear(gl::COLOR_BUFFER_BIT));
 
-            gl_try!(gl; gl.Viewport(0, 0, 128, 128));
+            gl_try!(gl; gl.Viewport(0, 0, self.size, self.size));
             let texture = self.visualizer.render_to_texture(gl);
-            // TODO: Scale based on display size (pixel density / resolution mismatch).
-            gl_try!(gl; gl.Viewport(0, 0, 128, 128));
-            self.screen.render_from_texture(gl, texture);
+            gl_try!(gl; gl.Viewport(0, 0, self.size * 2, self.size * 2));
+            self.screen.render_from_texture(gl, texture, self.size);
         }
     }
 

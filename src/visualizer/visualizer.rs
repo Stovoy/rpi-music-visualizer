@@ -32,7 +32,7 @@ impl Visualizer {
         }
     }
 
-    pub fn setup(&mut self, gl: &gfx::gl::Gl) {
+    pub fn setup(&mut self, gl: &gfx::gl::Gl, size: i32) {
         unsafe {
             let mut texture = mem::uninitialized();
             gl_try!(gl; gl.GenTextures(1, &mut texture));
@@ -48,7 +48,7 @@ impl Visualizer {
 
             gl_try!(gl; gl.TexImage2D(
                 gl::TEXTURE_2D, 0, gl::RGB as i32,
-                128, 128, 0, gl::RGB, gl::UNSIGNED_BYTE,
+                size, size, 0, gl::RGB, gl::UNSIGNED_BYTE,
                 ptr::null(),
             ));
 

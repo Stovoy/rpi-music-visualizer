@@ -49,7 +49,7 @@ impl screen::Screen for RawScreen {
         }
     }
 
-    fn render_from_texture(&mut self, gl: &gfx::gl::Gl, _texture: u32) {
+    fn render_from_texture(&mut self, gl: &gfx::gl::Gl, _texture: u32, size: i32) {
         unsafe {
             gl_try!(gl; gl.UseProgram(self.program_id));
 

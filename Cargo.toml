@@ -5,13 +5,16 @@ authors = ["Steve Mostovoy <stevemostovoysm@gmail.com>"]
 
 [dependencies]
 argparse = "0.2.1"
-blinkt = "0.4"
+blinkt = { version = "0.4", optional = true }
 sysfs_gpio = "0.5"
 gl = "0.10"
 glutin = "0.13"
 rustfft = "2.0.0"
 sphinxad-sys = "0.1.3"
-rand = "*"
+rand = "0.5.5"
+
+[features]
+hardware = ["blinkt"]
 
 [build-dependencies]
 gl_generator = "0.9"

@@ -1,7 +1,10 @@
 #![feature(extern_prelude)]
 
 extern crate argparse;
+
+#[cfg(not(target_os="macos"))]
 extern crate blinkt;
+
 extern crate gl;
 extern crate glutin;
 extern crate rand;
@@ -26,6 +29,7 @@ mod visualizer;
 fn main() {
     let mut selected_visualizer = "".to_string();
     let mut selected_screen = "".to_string();
+    let mut size = 1024;
     let mut use_fake_audio = false;
     {
         let mut parser = ArgumentParser::new();
@@ -36,6 +40,9 @@ fn main() {
         parser.refer(&mut selected_screen)
               .add_option(&["-s", "--screen"], Store,
                           "Which screen to use.");
+        parser.refer(&mut size)
+              .add_option(&["--size"], Store,
+                          "Window size.");
         parser.refer(&mut use_fake_audio)
               .add_option(&["--fake"], StoreTrue,
                           "Use fake audio.");
@@ -56,5 +63,5 @@ fn main() {
 
     let visualizer = visualizer::Visualizer::new(selected_visualizer);
     let screen = screen::create_screen(selected_screen);
-    gfx::run(visualizer, screen, audio_rx);
+    gfx::run(visualizer, screen, audio_rx, size);
 }

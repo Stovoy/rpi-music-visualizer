@@ -143,9 +143,9 @@ impl screen::Screen for LedDiskEmulatorScreen {
         }
     }
 
-    fn render_from_texture(&mut self, gl: &gfx::gl::Gl, texture: u32) {
+    fn render_from_texture(&mut self, gl: &gfx::gl::Gl, texture: u32, size: i32) {
         unsafe {
-            let pixel_colors = self.mapper.map_from_texture(gl, texture);
+            let pixel_colors = self.mapper.map_from_texture(gl, texture, size);
 
             gl_try!(gl; gl.UseProgram(self.program_id));
 

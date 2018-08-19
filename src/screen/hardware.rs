@@ -28,8 +28,8 @@ impl HardwareScreen {
 impl screen::Screen for HardwareScreen {
     fn setup(&mut self, _gl: &gfx::gl::Gl) {}
 
-    fn render_from_texture(&mut self, gl: &gfx::gl::Gl, texture: u32) {
-        let pixel_colors = self.mapper.map_from_texture(gl, texture);
+    fn render_from_texture(&mut self, gl: &gfx::gl::Gl, texture: u32, size: i32) {
+        let pixel_colors = self.mapper.map_from_texture(gl, texture, size);
 
         self.pixels_tx.send(pixel_colors).unwrap();
     }
