@@ -3,6 +3,7 @@ use gfx;
 use gfx::gl;
 use std::mem;
 use std::ptr;
+use visualizer::visualizer::SubVisualizer;
 
 const NUM_SQUARES: usize = 4;
 const NUM_VERTICIES_PER_SQUARE: usize = 6;
@@ -15,8 +16,8 @@ pub struct PowerCirclesVisualizer {
     vertex_data: [f32; NUM_FLOATS],
 }
 
-impl PowerCirclesVisualizer {
-    pub fn new() -> PowerCirclesVisualizer {
+impl SubVisualizer for PowerCirclesVisualizer {
+    fn new() -> PowerCirclesVisualizer {
         PowerCirclesVisualizer {
             program_id: 0,
             framebuffer_id: 0,
@@ -24,43 +25,12 @@ impl PowerCirclesVisualizer {
         }
     }
 
-    pub fn setup(&mut self, gl: &gfx::gl::Gl, framebuffer_id: u32) {
-        unsafe {
-            let vs = gl_try!(gl; gl.CreateShader(gl::VERTEX_SHADER));
-            gl_try!(gl; gl.ShaderSource(vs, 1, [VS_SRC.as_ptr() as *const _].as_ptr(), ptr::null()));
-            gl_try!(gl; gl.CompileShader(vs));
-
-            let fs = gl_try!(gl; gl.CreateShader(gl::FRAGMENT_SHADER));
-            gl_try!(gl; gl.ShaderSource(fs, 1, [FS_SRC.as_ptr() as *const _].as_ptr(), ptr::null()));
-            gl_try!(gl; gl.CompileShader(fs));
-
-            let program = gl_try!(gl; gl.CreateProgram());
-            gl_try!(gl; gl.AttachShader(program, vs));
-            gl_try!(gl; gl.AttachShader(program, fs));
-            gl_try!(gl; gl.LinkProgram(program));
-
-            self.program_id = program;
-
-            let mut is_linked = mem::uninitialized();
-            gl_try!(gl; gl.GetProgramiv(program, gl::LINK_STATUS, &mut is_linked));
-            if is_linked == gl::FALSE as i32 {
-                let mut max_length = mem::uninitialized();
-                gl_try!(gl; gl.GetProgramiv(program, gl::INFO_LOG_LENGTH, &mut max_length));
-
-                let mut info_log = vec![0; max_length as usize];
-                gl_try!(gl; gl.GetProgramInfoLog(program, max_length, &mut max_length, info_log.as_mut_ptr()));
-
-                for info_char in info_log.iter() {
-                    print!("{}", *info_char as u8 as char);
-                }
-                panic!();
-            }
-
-            self.framebuffer_id = framebuffer_id;
-        }
+    fn post_setup(&mut self, program_id: u32, framebuffer_id: u32) {
+        self.program_id = program_id;
+        self.framebuffer_id = framebuffer_id;
     }
 
-    pub fn update(&mut self, audio_frame: audio::AudioFrame) {
+    fn update(&mut self, audio_frame: audio::AudioFrame) {
         let low = audio_frame.low_power;
         let mid = audio_frame.mid_power;
         let high = audio_frame.high_power;
@@ -68,7 +38,7 @@ impl PowerCirclesVisualizer {
         self.vertex_data = generate_vertex_data(low, mid, high);
     }
 
-    pub fn render_to_texture(&self, gl: &gfx::gl::Gl) {
+    fn render_to_texture(&self, gl: &gfx::gl::Gl) {
         unsafe {
             gl_try!(gl; gl.UseProgram(self.program_id));
 
@@ -123,47 +93,9 @@ impl PowerCirclesVisualizer {
             gl_try!(gl; gl.DeleteVertexArrays(1, &vao));
         }
     }
-}
 
-fn generate_vertex_data(low: f32, mid: f32, high: f32) -> [f32; NUM_FLOATS] {
-    let s1 = 1.0;
-    let s2 = 0.75;
-    let s3 = 0.5;
-    let s4 = 0.25;
-
-    let r = 1.0;
-    let g = 1.0;
-    let b = 1.0;
-
-    [
-        -s1, -s1, r, 0.0, 0.0, s1, low,
-        -s1, s1, r, 0.0, 0.0, s1, low,
-        s1, s1, r, 0.0, 0.0, s1, low,
-        -s1, -s1, r, 0.0, 0.0, s1, low,
-        s1, -s1, r, 0.0, 0.0, s1, low,
-        s1, s1, r, 0.0, 0.0, s1, low,
-        -s2, -s2, 0.0, g, 0.0, s2, mid,
-        -s2, s2, 0.0, g, 0.0, s2, mid,
-        s2, s2, 0.0, g, 0.0, s2, mid,
-        -s2, -s2, 0.0, g, 0.0, s2, mid,
-        s2, -s2, 0.0, g, 0.0, s2, mid,
-        s2, s2, 0.0, g, 0.0, s2, mid,
-        -s3, -s3, 0.0, 0.0, b, s3, high,
-        -s3, s3, 0.0, 0.0, b, s3, high,
-        s3, s3, 0.0, 0.0, b, s3, high,
-        -s3, -s3, 0.0, 0.0, b, s3, high,
-        s3, -s3, 0.0, 0.0, b, s3, high,
-        s3, s3, 0.0, 0.0, b, s3, high,
-        -s4, -s4, 0.0, 0.0, 0.0, s4, 0.0,
-        -s4, s4, 0.0, 0.0, 0.0, s4, 0.0,
-        s4, s4, 0.0, 0.0, 0.0, s4, 0.0,
-        -s4, -s4, 0.0, 0.0, 0.0, s4, 0.0,
-        s4, -s4, 0.0, 0.0, 0.0, s4, 0.0,
-        s4, s4, 0.0, 0.0, 0.0, s4, 0.0,
-    ]
-}
-
-const VS_SRC: &'static [u8] = b"
+    fn vs_src(&self) -> &[u8] {
+        b"
 #version 100
 precision mediump float;
 
@@ -185,9 +117,11 @@ void main() {
     v_radius = radius;
     v_power = power;
 }
-\0";
+\0"
+    }
 
-const FS_SRC: &'static [u8] = b"
+    fn fs_src(&self) -> &[u8] {
+        b"
 #version 100
 precision mediump float;
 
@@ -232,4 +166,45 @@ void main() {
         }
     }
 }
-\0";
+\0"
+    }
+}
+
+fn generate_vertex_data(low: f32, mid: f32, high: f32) -> [f32; NUM_FLOATS] {
+    let s1 = 1.0;
+    let s2 = 0.75;
+    let s3 = 0.5;
+    let s4 = 0.25;
+
+    let r = 1.0;
+    let g = 1.0;
+    let b = 1.0;
+
+    [
+        -s1, -s1, r, 0.0, 0.0, s1, low,
+        -s1, s1, r, 0.0, 0.0, s1, low,
+        s1, s1, r, 0.0, 0.0, s1, low,
+        -s1, -s1, r, 0.0, 0.0, s1, low,
+        s1, -s1, r, 0.0, 0.0, s1, low,
+        s1, s1, r, 0.0, 0.0, s1, low,
+        -s2, -s2, 0.0, g, 0.0, s2, mid,
+        -s2, s2, 0.0, g, 0.0, s2, mid,
+        s2, s2, 0.0, g, 0.0, s2, mid,
+        -s2, -s2, 0.0, g, 0.0, s2, mid,
+        s2, -s2, 0.0, g, 0.0, s2, mid,
+        s2, s2, 0.0, g, 0.0, s2, mid,
+        -s3, -s3, 0.0, 0.0, b, s3, high,
+        -s3, s3, 0.0, 0.0, b, s3, high,
+        s3, s3, 0.0, 0.0, b, s3, high,
+        -s3, -s3, 0.0, 0.0, b, s3, high,
+        s3, -s3, 0.0, 0.0, b, s3, high,
+        s3, s3, 0.0, 0.0, b, s3, high,
+        -s4, -s4, 0.0, 0.0, 0.0, s4, 0.0,
+        -s4, s4, 0.0, 0.0, 0.0, s4, 0.0,
+        s4, s4, 0.0, 0.0, 0.0, s4, 0.0,
+        -s4, -s4, 0.0, 0.0, 0.0, s4, 0.0,
+        s4, -s4, 0.0, 0.0, 0.0, s4, 0.0,
+        s4, s4, 0.0, 0.0, 0.0, s4, 0.0,
+    ]
+}
+

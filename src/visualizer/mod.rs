@@ -4,3 +4,4 @@ mod visualizer;
 mod power_circles;
 mod equalizer;
 mod smiley;
+mod symmetry;

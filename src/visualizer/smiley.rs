@@ -3,6 +3,7 @@ use gfx;
 use gfx::gl;
 use std::mem;
 use std::ptr;
+use visualizer::visualizer::SubVisualizer;
 
 const NUM_SQUARES: usize = 1;
 const NUM_VERTICIES_PER_SQUARE: usize = 6;
@@ -16,8 +17,8 @@ pub struct SmileyVisualizer {
     phase: f32,
 }
 
-impl SmileyVisualizer {
-    pub fn new() -> SmileyVisualizer {
+impl SubVisualizer for SmileyVisualizer {
+    fn new() -> SmileyVisualizer {
         SmileyVisualizer {
             program_id: 0,
             framebuffer_id: 0,
@@ -28,73 +29,12 @@ impl SmileyVisualizer {
         }
     }
 
-    pub fn setup(&mut self, gl: &gfx::gl::Gl, framebuffer_id: u32) {
-        unsafe {
-            let vs = gl_try!(gl; gl.CreateShader(gl::VERTEX_SHADER));
-            gl_try!(gl; gl.ShaderSource(vs, 1, [VS_SRC.as_ptr() as *const _].as_ptr(), ptr::null()));
-            gl_try!(gl; gl.CompileShader(vs));
-
-            let mut is_compiled = mem::uninitialized();
-            gl_try!(gl; gl.GetShaderiv(vs, gl::COMPILE_STATUS, &mut is_compiled));
-            if is_compiled == gl::FALSE as i32 {
-                let mut max_length = mem::uninitialized();
-                gl_try!(gl; gl.GetShaderiv(vs, gl::INFO_LOG_LENGTH, &mut max_length));
-
-                let mut info_log = vec![0; max_length as usize];
-                gl_try!(gl; gl.GetShaderInfoLog(vs, max_length, &mut max_length, info_log.as_mut_ptr()));
-
-                for info_char in info_log.iter() {
-                    print!("{}", *info_char as u8 as char);
-                }
-                panic!();
-            }
-
-            let fs = gl_try!(gl; gl.CreateShader(gl::FRAGMENT_SHADER));
-            gl_try!(gl; gl.ShaderSource(fs, 1, [FS_SRC.as_ptr() as *const _].as_ptr(), ptr::null()));
-            gl_try!(gl; gl.CompileShader(fs));
-
-            let mut is_compiled = mem::uninitialized();
-            gl_try!(gl; gl.GetShaderiv(fs, gl::COMPILE_STATUS, &mut is_compiled));
-            if is_compiled == gl::FALSE as i32 {
-                let mut max_length = mem::uninitialized();
-                gl_try!(gl; gl.GetShaderiv(fs, gl::INFO_LOG_LENGTH, &mut max_length));
-
-                let mut info_log = vec![0; max_length as usize];
-                gl_try!(gl; gl.GetShaderInfoLog(fs, max_length, &mut max_length, info_log.as_mut_ptr()));
-
-                for info_char in info_log.iter() {
-                    print!("{}", *info_char as u8 as char);
-                }
-                panic!();
-            }
-
-            let program = gl_try!(gl; gl.CreateProgram());
-            gl_try!(gl; gl.AttachShader(program, vs));
-            gl_try!(gl; gl.AttachShader(program, fs));
-            gl_try!(gl; gl.LinkProgram(program));
-
-            self.program_id = program;
-
-            let mut is_linked = mem::uninitialized();
-            gl_try!(gl; gl.GetProgramiv(program, gl::LINK_STATUS, &mut is_linked));
-            if is_linked == gl::FALSE as i32 {
-                let mut max_length = mem::uninitialized();
-                gl_try!(gl; gl.GetProgramiv(program, gl::INFO_LOG_LENGTH, &mut max_length));
-
-                let mut info_log = vec![0; max_length as usize];
-                gl_try!(gl; gl.GetProgramInfoLog(program, max_length, &mut max_length, info_log.as_mut_ptr()));
-
-                for info_char in info_log.iter() {
-                    print!("{}", *info_char as u8 as char);
-                }
-                panic!();
-            }
-
-            self.framebuffer_id = framebuffer_id;
-        }
+    fn post_setup(&mut self, program_id: u32, framebuffer_id: u32) {
+        self.program_id = program_id;
+        self.framebuffer_id = framebuffer_id;
     }
 
-    pub fn update(&mut self, audio_frame: audio::AudioFrame) {
+    fn update(&mut self, audio_frame: audio::AudioFrame) {
         self.vertex_data = generate_vertex_data();
 
         // Sum the 1000-2000hz amplitudes.
@@ -111,7 +51,7 @@ impl SmileyVisualizer {
         }
     }
 
-    pub fn render_to_texture(&self, gl: &gfx::gl::Gl) {
+    fn render_to_texture(&self, gl: &gfx::gl::Gl) {
         unsafe {
             gl_try!(gl; gl.UseProgram(self.program_id));
 
@@ -157,22 +97,9 @@ impl SmileyVisualizer {
             gl_try!(gl; gl.DeleteVertexArrays(1, &vao));
         }
     }
-}
 
-fn generate_vertex_data() -> Vec<f32> {
-    let size = 1.0;
-
-    vec![
-        -size, -size,
-        -size, size,
-        size, size,
-        -size, -size,
-        size, -size,
-        size, size,
-    ]
-}
-
-const VS_SRC: &'static [u8] = b"
+    fn vs_src(&self) -> &[u8] {
+        b"
 #version 100
 precision mediump float;
 
@@ -190,9 +117,10 @@ void main() {
     gl_Position = vec4(position, 0.0, 1.0);
     v_position = position;
 }
-\0";
+\0"
+    }
 
-const FS_SRC: &'static [u8] = b"
+    fn fs_src(&self) -> &[u8] {b"
 #version 100
 precision mediump float;
 
@@ -269,4 +197,19 @@ void main() {
         gl_FragColor = vec4(0.0);
     }
 }
-\0";
+\0"
+    }
+}
+
+fn generate_vertex_data() -> Vec<f32> {
+    let size = 1.0;
+
+    vec![
+        -size, -size,
+        -size, size,
+        size, size,
+        -size, -size,
+        size, -size,
+        size, size,
+    ]
+}

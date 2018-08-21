@@ -3,6 +3,7 @@ use gfx;
 use gfx::gl;
 use std::mem;
 use std::ptr;
+use visualizer::visualizer::SubVisualizer;
 
 const NUM_SQUARES: usize = 7;
 const NUM_VERTICIES_PER_SQUARE: usize = 6;
@@ -17,8 +18,8 @@ pub struct EqualizerVisualizer {
     phase: f32,
 }
 
-impl EqualizerVisualizer {
-    pub fn new() -> EqualizerVisualizer {
+impl SubVisualizer for EqualizerVisualizer {
+    fn new() -> EqualizerVisualizer {
         EqualizerVisualizer {
             program_id: 0,
             framebuffer_id: 0,
@@ -28,73 +29,12 @@ impl EqualizerVisualizer {
         }
     }
 
-    pub fn setup(&mut self, gl: &gfx::gl::Gl, framebuffer_id: u32) {
-        unsafe {
-            let vs = gl_try!(gl; gl.CreateShader(gl::VERTEX_SHADER));
-            gl_try!(gl; gl.ShaderSource(vs, 1, [VS_SRC.as_ptr() as *const _].as_ptr(), ptr::null()));
-            gl_try!(gl; gl.CompileShader(vs));
-
-            let mut is_compiled = mem::uninitialized();
-            gl_try!(gl; gl.GetShaderiv(vs, gl::COMPILE_STATUS, &mut is_compiled));
-            if is_compiled == gl::FALSE as i32 {
-                let mut max_length = mem::uninitialized();
-                gl_try!(gl; gl.GetShaderiv(vs, gl::INFO_LOG_LENGTH, &mut max_length));
-
-                let mut info_log = vec![0; max_length as usize];
-                gl_try!(gl; gl.GetShaderInfoLog(vs, max_length, &mut max_length, info_log.as_mut_ptr()));
-
-                for info_char in info_log.iter() {
-                    print!("{}", *info_char as u8 as char);
-                }
-                panic!();
-            }
-
-            let fs = gl_try!(gl; gl.CreateShader(gl::FRAGMENT_SHADER));
-            gl_try!(gl; gl.ShaderSource(fs, 1, [FS_SRC.as_ptr() as *const _].as_ptr(), ptr::null()));
-            gl_try!(gl; gl.CompileShader(fs));
-
-            let mut is_compiled = mem::uninitialized();
-            gl_try!(gl; gl.GetShaderiv(fs, gl::COMPILE_STATUS, &mut is_compiled));
-            if is_compiled == gl::FALSE as i32 {
-                let mut max_length = mem::uninitialized();
-                gl_try!(gl; gl.GetShaderiv(fs, gl::INFO_LOG_LENGTH, &mut max_length));
-
-                let mut info_log = vec![0; max_length as usize];
-                gl_try!(gl; gl.GetShaderInfoLog(fs, max_length, &mut max_length, info_log.as_mut_ptr()));
-
-                for info_char in info_log.iter() {
-                    print!("{}", *info_char as u8 as char);
-                }
-                panic!();
-            }
-
-            let program = gl_try!(gl; gl.CreateProgram());
-            gl_try!(gl; gl.AttachShader(program, vs));
-            gl_try!(gl; gl.AttachShader(program, fs));
-            gl_try!(gl; gl.LinkProgram(program));
-
-            self.program_id = program;
-
-            let mut is_linked = mem::uninitialized();
-            gl_try!(gl; gl.GetProgramiv(program, gl::LINK_STATUS, &mut is_linked));
-            if is_linked == gl::FALSE as i32 {
-                let mut max_length = mem::uninitialized();
-                gl_try!(gl; gl.GetProgramiv(program, gl::INFO_LOG_LENGTH, &mut max_length));
-
-                let mut info_log = vec![0; max_length as usize];
-                gl_try!(gl; gl.GetProgramInfoLog(program, max_length, &mut max_length, info_log.as_mut_ptr()));
-
-                for info_char in info_log.iter() {
-                    print!("{}", *info_char as u8 as char);
-                }
-                panic!();
-            }
-
-            self.framebuffer_id = framebuffer_id;
-        }
+    fn post_setup(&mut self, program_id: u32, framebuffer_id: u32) {
+        self.program_id = program_id;
+        self.framebuffer_id = framebuffer_id;
     }
 
-    pub fn update(&mut self, audio_frame: audio::AudioFrame) {
+    fn update(&mut self, audio_frame: audio::AudioFrame) {
         self.vertex_data = generate_vertex_data(audio_frame);
         self.phase += 0.1;
         if self.phase >= 3.14 * 2.0 {
@@ -102,7 +42,7 @@ impl EqualizerVisualizer {
         }
     }
 
-    pub fn render_to_texture(&self, gl: &gfx::gl::Gl) {
+    fn render_to_texture(&self, gl: &gfx::gl::Gl) {
         unsafe {
             gl_try!(gl; gl.UseProgram(self.program_id));
 
@@ -166,6 +106,65 @@ impl EqualizerVisualizer {
             gl_try!(gl; gl.DeleteVertexArrays(1, &vao));
         }
     }
+
+    fn vs_src(&self) -> &[u8] {
+        b"
+#version 100
+precision mediump float;
+
+#define PI 3.1415926535897932384626433832795
+
+uniform float phase;
+
+attribute vec2 position;
+attribute vec3 color;
+attribute float radius;
+attribute float power;
+
+// Variables for the Fragment Shader.
+varying vec2 v_position;
+varying vec3 v_color;
+varying float v_radius;
+varying float v_power;
+
+void main() {
+    v_position = position;
+    // float x = sin((v_position.y + 2.0) * PI + phase) * radius / 1.0;
+    // float y = sin((v_position.x + 2.0) * PI + phase) * radius / 1.0;
+    gl_Position = vec4(v_position, 0.0, 1.0);
+    v_color = color;
+    v_radius = radius;
+    v_power = power;
+}
+\0"
+    }
+
+    fn fs_src(&self) -> &[u8] {
+        b"
+#version 100
+precision mediump float;
+
+#define PI 3.1415926535897932384626433832795
+
+uniform float phase;
+
+// Interpolated from the Vertex Shader.
+varying vec2 v_position;
+varying vec3 v_color;
+varying float v_radius;
+varying float v_power;
+
+void main() {
+    if ((v_position.x * v_position.x) + (v_position.y * v_position.y) > v_radius * v_radius) {
+        // Out of bounds.
+        gl_FragColor = vec4(0.0);
+    } else {
+        float y_scaling = (-v_position.y + 3.0) / (1.0 + 3.0);
+        gl_FragColor = vec4(v_color * y_scaling * v_power, 1.0);
+    }
+}
+\0"
+    }
 }
 
 fn generate_vertex_data(audio_frame: audio::AudioFrame) -> Vec<f32> {
@@ -225,92 +224,3 @@ fn generate_vertex_data(audio_frame: audio::AudioFrame) -> Vec<f32> {
 
     vertex_data
 }
-
-const VS_SRC: &'static [u8] = b"
-#version 100
-precision mediump float;
-
-#define PI 3.1415926535897932384626433832795
-
-uniform float phase;
-
-attribute vec2 position;
-attribute vec3 color;
-attribute float radius;
-attribute float power;
-
-// Variables for the Fragment Shader.
-varying vec2 v_position;
-varying vec3 v_color;
-varying float v_radius;
-varying float v_power;
-
-void main() {
-    v_position = position;
-    float x = sin((v_position.y + 2.0) * PI + phase) * radius / 1.0;
-    float y = sin((v_position.x + 2.0) * PI + phase) * radius / 1.0;
-    // if (v_position.x < 0.0) {
-    //     v_position.x += x;
-    // } else {
-    //     v_position.x -= x;
-    // }
-    // if (v_position.y < 0.0) {
-    //     v_position.y -= y;
-    // } else {
-    //     v_position.y += y;
-    // }
-    gl_Position = vec4(v_position, 0.0, 1.0);
-    v_color = color;
-    v_radius = radius;
-    v_power = power;
-}
-\0";
-
-const FS_SRC: &'static [u8] = b"
-#version 100
-precision mediump float;
-
-#define PI 3.1415926535897932384626433832795
-
-uniform float phase;
-
-// Interpolated from the Vertex Shader.
-varying vec2 v_position;
-varying vec3 v_color;
-varying float v_radius;
-varying float v_power;
-
-void main() {
-    if ((v_position.x * v_position.x) + (v_position.y * v_position.y) > v_radius * v_radius) {
-        // Out of bounds.
-        gl_FragColor = vec4(0.0);
-    } else {
-        vec2 mirrored_position = v_position;
-
-        float angle = v_power * PI;
-        vec2 sector_start = vec2(0.0 + v_radius * sin(angle), -1.0 + v_radius * (1.0 - cos(angle)));
-        vec2 sector_end = vec2(0.0, -1.0);
-
-        if (mirrored_position.x > 0.0) {
-            mirrored_position.x = -mirrored_position.x;
-        }
-
-        bool clockwise_from_start = (
-            -sector_start.x * mirrored_position.y +
-            sector_start.y * mirrored_position.x > 0.0
-        );
-        bool clockwise_from_end = (
-            -sector_end.x * mirrored_position.y +
-            sector_end.y * mirrored_position.x > 0.0
-        );
-
-        if (true || (!clockwise_from_start && clockwise_from_end)) {
-            // In the sector.
-            float y_scaling = (-v_position.y + 3.0) / (1.0 + 3.0);
-            gl_FragColor = vec4(v_color * y_scaling * v_power, 1.0);
-        } else {
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-        }
-    }
-}
-\0";

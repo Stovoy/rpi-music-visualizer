@@ -33,7 +33,7 @@ pub fn visualize_microphone(tx: mpsc::SyncSender<audio::AudioFrame>) {
             continue;
         }
 
-        visualize_samples(&window[0..1023].to_vec(), sample_count as usize, duration_seconds, &tx);
+        visualize_samples(&window[0..1023].to_vec(), duration_seconds, &tx);
         window = window.split_off(1024);
     }
 }
@@ -69,7 +69,7 @@ pub fn visualize_fake(tx: mpsc::SyncSender<audio::AudioFrame>) {
 	}
 }
 
-fn visualize_samples(samples: &Vec<f32>, length: usize, duration_seconds: f32, tx: &mpsc::SyncSender<audio::AudioFrame>) {
+fn visualize_samples(samples: &Vec<f32>, duration_seconds: f32, tx: &mpsc::SyncSender<audio::AudioFrame>) {
     let samples_per_sec = (samples.len() as f32 / duration_seconds).ceil();
     let frequency_bins = audio::frequency_bins(
         samples_per_sec as u32,
