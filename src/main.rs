@@ -30,7 +30,9 @@ fn main() {
     let mut selected_visualizer = "".to_string();
     let mut selected_screen = "".to_string();
     let mut size = 128;
-    let mut ampltitude_scalar = 8.0;
+    let mut samples_per_second = 22050;
+    let mut window_sample_size = 1024;
+    let mut amplitude_scalar = 8.0;
     let mut use_fake_audio = false;
     {
         let mut parser = ArgumentParser::new();
@@ -44,8 +46,14 @@ fn main() {
         parser.refer(&mut size)
               .add_option(&["--size"], Store,
                           "Window size.");
-        parser.refer(&mut ampltitude_scalar)
-              .add_option(&["--ampltitude_scalar"], Store,
+        parser.refer(&mut samples_per_second)
+              .add_option(&["--samples_per_second"], Store,
+                          "Number of samples per second to record from the micrphone.");
+        parser.refer(&mut window_sample_size)
+              .add_option(&["--window_sample_size"], Store,
+                          "Number of samples to process at a time.");
+        parser.refer(&mut amplitude_scalar)
+              .add_option(&["--amplitude_scalar"], Store,
                           "Multiplier for audio ampltitude.");
         parser.refer(&mut use_fake_audio)
               .add_option(&["--fake"], StoreTrue,
@@ -57,7 +65,7 @@ fn main() {
 
 	if !use_fake_audio {
 		thread::spawn(move || {
-			listen::visualize_microphone(audio_tx, ampltitude_scalar);
+			listen::visualize_microphone(audio_tx, samples_per_second, window_sample_size, amplitude_scalar);
 		});
 	} else {
 		thread::spawn(move || {

@@ -39,7 +39,7 @@ pub fn frequency_bins(sample_rate: u32, sample_count: u32) -> Vec<f32> {
     output
 }
 
-pub fn to_amplitude(input: Vec<Complex<f32>>, ampltitude_scalar: f32) -> Vec<f32> {
+pub fn to_amplitude(input: Vec<Complex<f32>>, amplitude_scalar: f32) -> Vec<f32> {
     let mut output: Vec<f32> = vec![0.0; input.len()];
 
     // TODO: Support ampltitude_scalar from a button input.
@@ -47,7 +47,7 @@ pub fn to_amplitude(input: Vec<Complex<f32>>, ampltitude_scalar: f32) -> Vec<f32
         let re = input[i].re;
         let im = input[i].im;
         output[i] = (re * re + im * im).sqrt() / input.len() as f32;
-        output[i] *= ampltitude_scalar;
+        output[i] *= amplitude_scalar;
     }
 
     output
