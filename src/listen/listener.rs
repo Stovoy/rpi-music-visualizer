@@ -5,7 +5,6 @@ use std::sync::mpsc;
 use std::thread;
 use std::time;
 
-
 pub fn visualize_microphone(tx: mpsc::SyncSender<audio::AudioFrame>,
     samples_per_second: u32, window_sample_size: usize, amplitude_scalar: f32) {
     println!("Connecting to microphone.");
@@ -24,15 +23,11 @@ pub fn visualize_microphone(tx: mpsc::SyncSender<audio::AudioFrame>,
     loop {
         let sample_count = unsafe { ad_read(ad, raw_buffer, samples_per_second) };
         if sample_count != 0 {
-            println!("Read {} new samples.", sample_count);
-
             for i in 0..sample_count as usize {
                 let sample_value = buffer[i] as f32 / i16::max_value() as f32;
                 let clamped_value = f32::max(-1.0, f32::min(1.0, sample_value));
                 window.push(clamped_value);
             }
-
-            println!("Added new samples to window.");
         }
 
         if window.len() < window_sample_size {
@@ -40,12 +35,8 @@ pub fn visualize_microphone(tx: mpsc::SyncSender<audio::AudioFrame>,
             continue;
         }
 
-        println!("Processing {} samples.", window_sample_size);
-
         visualize_samples(&window[0..window_sample_size].to_vec(), duration_seconds, amplitude_scalar, &tx);
         window = window.split_off(window_sample_size);
-
-        println!("Collecting new samples.");
     }
 }
 

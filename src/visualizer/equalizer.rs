@@ -159,8 +159,7 @@ void main() {
         // Out of bounds.
         gl_FragColor = vec4(0.0);
     } else {
-        float y_scaling = (-v_position.y + 3.0) / (1.0 + 3.0);
-        gl_FragColor = vec4(v_color * y_scaling * v_power, 1.0);
+        gl_FragColor = vec4(v_color * v_power, 1.0);
     }
 }
 \0"
