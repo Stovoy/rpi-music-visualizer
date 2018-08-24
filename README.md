@@ -1,5 +1,5 @@
 # rpi-music-visualizer
-Raspberry Pi Music Visualizer written in Rust 
+Raspberry Pi Music Visualizer written in Rust
 
 ## Roadmap
 
@@ -13,6 +13,8 @@ Raspberry Pi Music Visualizer written in Rust
 
 [x] Wiring diagram
 
+[x] Microphone
+
 [ ] How to wear it (Comfortably)
 
 [ ] Improve visualizer data quality
@@ -21,8 +23,35 @@ Raspberry Pi Music Visualizer written in Rust
 
 # How to run on Raspberry Pi
 
-mkdir /tmp/xdg
-export XDG_RUNTIME_DIR=/tmp/xdg
+## Build
 
-sudo -E startx $(pwd)/target/debug/rpi-music-visualizer --visualizer equalizer --fake --screen hardware
-sudo -E startx $(pwd)/target/release/rpi-music-visualizer --visualizer equalizer --fake --screen hardware
+cargo build --release --features hardware
+
+## Run
+
+./rpi.sh --screen hardware
+
+## Alsa configuration
+Using a USB microphone on the Raspberry Pi.
+
+```
+pcm.!default {
+  type dsnoop
+  ipc_key 1
+  slave {
+    pcm "hw:1,0"
+    channels 1
+
+    period_size 1024
+    buffer_size 24000
+    rate 24000
+    periods 0
+    period_time 0
+  }
+}
+
+ctl.!default {
+  type hw
+  card 0
+}
+```

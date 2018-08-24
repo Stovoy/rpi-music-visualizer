@@ -30,9 +30,9 @@ fn main() {
     let mut selected_visualizer = "".to_string();
     let mut selected_screen = "".to_string();
     let mut size = 128;
-    let mut samples_per_second = 22050;
+    let mut samples_per_second = 24000;
     let mut window_sample_size = 1024;
-    let mut amplitude_scalar = 8.0;
+    let mut amplitude_scalar = 16.0;
     let mut use_fake_audio = false;
     {
         let mut parser = ArgumentParser::new();
