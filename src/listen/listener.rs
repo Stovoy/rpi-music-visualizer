@@ -19,10 +19,13 @@ pub fn visualize_microphone(tx: mpsc::SyncSender<audio::AudioFrame>,
     let mut window: Vec<f32> = Vec::with_capacity(window_sample_size);
     let duration_seconds = window_sample_size as f32 / samples_per_second as f32;
 
+    let mut buffer = vec![0; samples_per_second as usize];
+    let raw_buffer = buffer.as_mut_ptr();
     loop {
-        let mut buffer = vec![0; samples_per_second as usize];
-        let raw_buffer = buffer.as_mut_ptr();
         let sample_count = unsafe { ad_read(ad, raw_buffer, samples_per_second) };
+        if sample_count == 0 {
+            continue;
+        }
 
         println!("Read {} new samples.", sample_count);
 
@@ -35,6 +38,7 @@ pub fn visualize_microphone(tx: mpsc::SyncSender<audio::AudioFrame>,
         println!("Added new samples to window.");
 
         if window.len() < window_sample_size {
+            thread::sleep(time::Duration::from_millis(5));
             continue;
         }
 
