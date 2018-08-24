@@ -8,13 +8,14 @@ use std::time;
 
 pub fn visualize_microphone(tx: mpsc::SyncSender<audio::AudioFrame>,
     samples_per_second: u32, window_sample_size: usize, amplitude_scalar: f32) {
+    println!("Connecting to microphone.");
     let ad = unsafe { ad_open_sps(samples_per_second) };
     let rec_successful = unsafe { ad_start_rec(ad) } == 0;
     if !rec_successful {
         panic!("Could not start recording microphone.");
     }
+    println!("Connected microphone.");
 
-    let window_sample_size = 1024;
     let mut window: Vec<f32> = Vec::with_capacity(window_sample_size);
     let duration_seconds = window_sample_size as f32 / samples_per_second as f32;
 
@@ -23,18 +24,26 @@ pub fn visualize_microphone(tx: mpsc::SyncSender<audio::AudioFrame>,
         let raw_buffer = buffer.as_mut_ptr();
         let sample_count = unsafe { ad_read(ad, raw_buffer, samples_per_second) };
 
+        println!("Read {} new samples.", sample_count);
+
         for i in 0..sample_count as usize {
             let sample_value = buffer[i] as f32 / i16::max_value() as f32;
             let clamped_value = f32::max(-1.0, f32::min(1.0, sample_value));
             window.push(clamped_value);
         }
 
+        println!("Added new samples to window.");
+
         if window.len() < window_sample_size {
             continue;
         }
 
+        println!("Processing {} samples.", window_sample_size);
+
         visualize_samples(&window[0..window_sample_size].to_vec(), duration_seconds, amplitude_scalar, &tx);
         window = window.split_off(window_sample_size);
+
+        println!("Collecting new samples.");
     }
 }
 

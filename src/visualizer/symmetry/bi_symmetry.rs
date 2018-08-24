@@ -1,8 +1,5 @@
 use audio;
 use gfx;
-use gfx::gl;
-use std::mem;
-use std::ptr;
 use visualizer::symmetry::symmetry::SymmetryVisualizer;
 use visualizer::visualizer::SubVisualizer;
 

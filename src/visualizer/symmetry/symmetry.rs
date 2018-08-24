@@ -3,7 +3,6 @@ use gfx;
 use gfx::gl;
 use std::mem;
 use std::ptr;
-use visualizer::visualizer::SubVisualizer;
 
 const NUM_SQUARES: usize = 1;
 const NUM_VERTICIES_PER_SQUARE: usize = 6;
@@ -87,7 +86,7 @@ impl SymmetryVisualizer {
     }
 }
 
-fn generate_vertex_data(audio_frame: audio::AudioFrame) -> Vec<f32> {
+fn generate_vertex_data(_audio_frame: audio::AudioFrame) -> Vec<f32> {
     let mut vertex_data = Vec::with_capacity(NUM_FLOATS);
 
     let add_square = |vertex_data: &mut Vec<f32>,
