@@ -29,7 +29,8 @@ mod visualizer;
 fn main() {
     let mut selected_visualizer = "".to_string();
     let mut selected_screen = "".to_string();
-    let mut size = 1024;
+    let mut size = 128;
+    let mut ampltitude_scalar = 8.0;
     let mut use_fake_audio = false;
     {
         let mut parser = ArgumentParser::new();
@@ -43,6 +44,9 @@ fn main() {
         parser.refer(&mut size)
               .add_option(&["--size"], Store,
                           "Window size.");
+        parser.refer(&mut ampltitude_scalar)
+              .add_option(&["--ampltitude_scalar"], Store,
+                          "Multiplier for audio ampltitude.");
         parser.refer(&mut use_fake_audio)
               .add_option(&["--fake"], StoreTrue,
                           "Use fake audio.");
@@ -53,7 +57,7 @@ fn main() {
 
 	if !use_fake_audio {
 		thread::spawn(move || {
-			listen::visualize_microphone(audio_tx);
+			listen::visualize_microphone(audio_tx, ampltitude_scalar);
 		});
 	} else {
 		thread::spawn(move || {

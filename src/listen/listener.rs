@@ -6,7 +6,7 @@ use std::thread;
 use std::time;
 
 
-pub fn visualize_microphone(tx: mpsc::SyncSender<audio::AudioFrame>) {
+pub fn visualize_microphone(tx: mpsc::SyncSender<audio::AudioFrame>, ampltitude_scalar: f32) {
     let samples_per_second = 22050;
     let ad = unsafe { ad_open_sps(samples_per_second) };
     let rec_successful = unsafe { ad_start_rec(ad) } == 0;
@@ -33,7 +33,7 @@ pub fn visualize_microphone(tx: mpsc::SyncSender<audio::AudioFrame>) {
             continue;
         }
 
-        visualize_samples(&window[0..1023].to_vec(), duration_seconds, &tx);
+        visualize_samples(&window[0..1023].to_vec(), duration_seconds, ampltitude_scalar, &tx);
         window = window.split_off(1024);
     }
 }
@@ -69,14 +69,15 @@ pub fn visualize_fake(tx: mpsc::SyncSender<audio::AudioFrame>) {
 	}
 }
 
-fn visualize_samples(samples: &Vec<f32>, duration_seconds: f32, tx: &mpsc::SyncSender<audio::AudioFrame>) {
+fn visualize_samples(samples: &Vec<f32>, duration_seconds: f32, ampltitude_scalar: f32,
+    tx: &mpsc::SyncSender<audio::AudioFrame>) {
     let samples_per_sec = (samples.len() as f32 / duration_seconds).ceil();
     let frequency_bins = audio::frequency_bins(
         samples_per_sec as u32,
         samples.len() as u32);
 
     let fft_output = audio::compute_fft(samples.to_vec());
-    let amplitudes = audio::to_amplitude(fft_output);
+    let amplitudes = audio::to_amplitude(fft_output, ampltitude_scalar);
 
     let low_threshold_hz = 1000.0;
     let mid_threshold_hz = 4000.0;

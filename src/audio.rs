@@ -39,16 +39,15 @@ pub fn frequency_bins(sample_rate: u32, sample_count: u32) -> Vec<f32> {
     output
 }
 
-pub fn to_amplitude(input: Vec<Complex<f32>>) -> Vec<f32> {
+pub fn to_amplitude(input: Vec<Complex<f32>>, ampltitude_scalar: f32) -> Vec<f32> {
     let mut output: Vec<f32> = vec![0.0; input.len()];
 
-    // TODO: Dynamic scaling? Potentiometer?
-    let scale_factor = 32.0;
+    // TODO: Support ampltitude_scalar from a button input.
     for i in 0..input.len() {
         let re = input[i].re;
         let im = input[i].im;
         output[i] = (re * re + im * im).sqrt() / input.len() as f32;
-        output[i] *= scale_factor;
+        output[i] *= ampltitude_scalar;
     }
 
     output
