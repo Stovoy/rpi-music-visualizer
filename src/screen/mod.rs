@@ -1,6 +1,6 @@
 use gfx;
 
-#[cfg(not(target_os="macos"))]
+#[cfg(feature="hardware")]
 mod hardware;
 mod led_disk_emulator;
 mod raw;
@@ -9,7 +9,7 @@ pub fn create_screen(selected_screen: String) -> Box<Screen> {
     match selected_screen.as_ref() {
         "raw" => Box::new(raw::RawScreen::new()),
         "emulator" => Box::new(led_disk_emulator::LedDiskEmulatorScreen::new()),
-        #[cfg(not(target_os="macos"))]
+        #[cfg(feature="hardware")]
         "hardware" => Box::new(hardware::HardwareScreen::new()),
 
         _ => Box::new(led_disk_emulator::LedDiskEmulatorScreen::new()),

@@ -2,7 +2,7 @@
 
 extern crate argparse;
 
-#[cfg(not(target_os="macos"))]
+#[cfg(feature="hardware")]
 extern crate blinkt;
 
 extern crate gl;
