@@ -61,6 +61,8 @@ fn main() {
         parser.parse_args_or_exit();
     }
 
+    rpio::read_button();
+
     let (audio_tx, audio_rx) = mpsc::sync_channel::<audio::AudioFrame>(1);
 
 	if !use_fake_audio {
