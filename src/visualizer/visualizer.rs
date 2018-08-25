@@ -3,6 +3,7 @@ use gfx;
 use gfx::gl;
 use std::mem;
 use std::ptr;
+use std::time;
 use visualizer::equalizer::EqualizerVisualizer;
 use visualizer::power_circles::PowerCirclesVisualizer;
 use visualizer::smiley::SmileyVisualizer;
@@ -20,6 +21,8 @@ pub trait SubVisualizer {
     fn fs_src(&self) -> &[u8];
 }
 
+const TIME_PER_VISUALIZER: time::Duration = time::Duration::from_secs(30);
+
 pub struct Visualizer {
     texture_id: u32,
 
@@ -32,22 +35,35 @@ pub struct Visualizer {
     pentasymmetry_visualizer: PentaSymmetryVisualizer,
 
     selected_visualizer: String,
+
+    rotate_visualizers: bool,
+    last_rotation: time::Instant,
 }
 
 impl Visualizer {
     pub fn new(selected_visualizer: String) -> Visualizer {
+        let rotate_visualizers = selected_visualizer == "";
+
+        let mut selected_visualizer = selected_visualizer;
+        if rotate_visualizers {
+            selected_visualizer = "bisymmetry".to_string();
+        }
+
         Visualizer {
             texture_id: 0,
 
-            equalizer_visualizer: EqualizerVisualizer::new(),
             power_circles_visualizer: PowerCirclesVisualizer::new(),
             smiley_visualizer: SmileyVisualizer::new(),
+            equalizer_visualizer: EqualizerVisualizer::new(),
             bisymmetry_visualizer: BiSymmetryVisualizer::new(),
             trisymmetry_visualizer: TriSymmetryVisualizer::new(),
             quadsymmetry_visualizer: QuadSymmetryVisualizer::new(),
             pentasymmetry_visualizer: PentaSymmetryVisualizer::new(),
 
             selected_visualizer,
+
+            rotate_visualizers,
+            last_rotation: time::Instant::now(),
         }
     }
 
@@ -109,6 +125,20 @@ impl Visualizer {
     }
 
     fn active_visualizer(&mut self) -> &mut SubVisualizer {
+        if self.rotate_visualizers &&
+            self.last_rotation.elapsed() > TIME_PER_VISUALIZER {
+            match self.selected_visualizer.as_ref() {
+                "bisymmetry" => self.selected_visualizer = "trisymmetry".to_string(),
+                "trisymmetry" => self.selected_visualizer = "quadsymmetry".to_string(),
+                "quadsymmetry" => self.selected_visualizer = "pentasymmetry".to_string(),
+                "pentasymmetry" => self.selected_visualizer = "bisymmetry".to_string(),
+
+                _ => (),
+            }
+
+            self.last_rotation = time::Instant::now();
+        }
+
         match self.selected_visualizer.as_ref() {
             "equalizer" => &mut self.equalizer_visualizer,
             "power_circles" => &mut self.power_circles_visualizer,
