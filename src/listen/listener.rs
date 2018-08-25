@@ -20,6 +20,9 @@ pub fn visualize_microphone(tx: mpsc::SyncSender<audio::AudioFrame>,
 
     let mut buffer = vec![0; samples_per_second as usize];
     let raw_buffer = buffer.as_mut_ptr();
+
+    let mut average_amplitudes = vec![0.0; 0];  // Store the average amplitudes over the last 800 samples.
+    let mut amplitude_scalar = amplitude_scalar;
     loop {
         let sample_count = unsafe { ad_read(ad, raw_buffer, samples_per_second) };
         if sample_count != 0 {
@@ -35,7 +38,14 @@ pub fn visualize_microphone(tx: mpsc::SyncSender<audio::AudioFrame>,
             continue;
         }
 
-        visualize_samples(&window[0..window_sample_size].to_vec(), duration_seconds, amplitude_scalar, &tx);
+        let average_amplitude = visualize_samples(&window[0..window_sample_size].to_vec(), duration_seconds, amplitude_scalar, &tx);
+        average_amplitudes.push(average_amplitude);
+        if average_amplitudes.len() > 400 {
+            average_amplitudes.drain(0..1);
+            let avg: f32 = average_amplitudes.iter().sum::<f32>() / average_amplitudes.len() as f32;
+            amplitude_scalar = 0.01 / avg;
+        }
+
         window = window.split_off(window_sample_size);
     }
 }
@@ -72,7 +82,7 @@ pub fn visualize_fake(tx: mpsc::SyncSender<audio::AudioFrame>) {
 }
 
 fn visualize_samples(samples: &Vec<f32>, duration_seconds: f32, amplitude_scalar: f32,
-    tx: &mpsc::SyncSender<audio::AudioFrame>) {
+    tx: &mpsc::SyncSender<audio::AudioFrame>) -> f32 {
     let samples_per_second = (samples.len() as f32 / duration_seconds).ceil();
     let frequency_bins = audio::frequency_bins(
         samples_per_second as u32,
@@ -122,4 +132,6 @@ fn visualize_samples(samples: &Vec<f32>, duration_seconds: f32, amplitude_scalar
     };
 
     tx.send(audio_frame).unwrap();
+
+    amplitudes.iter().sum::<f32>() / amplitudes.len() as f32
 }
