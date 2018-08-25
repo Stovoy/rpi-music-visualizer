@@ -35,23 +35,38 @@ cargo build --release --features hardware
 Using a USB microphone on the Raspberry Pi.
 
 ```
-pcm.!default {
+pcm.microphone {
   type dsnoop
   ipc_key 1
   slave {
-    pcm "hw:1,0"
-    channels 1
+    pcm "hw:2,0"
 
     period_size 1024
-    buffer_size 24000
+    buffer_size 1024
     rate 24000
     periods 0
     period_time 0
   }
 }
 
+pcm.!default {
+  type route
+
+  slave.pcm microphone
+  slave.channels 2
+
+  ttable {
+    # Copy both input channels to output channel 0 (Left).
+    0.0 0.5
+    1.0 0.5
+    # Send nothing to output channel 1 (Right).
+    0.1 0
+    1.1 0
+  }
+}
+
 ctl.!default {
   type hw
-  card 0
+  card 2
 }
 ```
