@@ -2,8 +2,8 @@ use sysfs_gpio::{Direction, Pin};
 use std::thread::sleep;
 use std::time::Duration;
 
-pub fn read_button() {
-    let pin = Pin::new(24);
+pub fn read_button(pin: u64) {
+    let pin = Pin::new(pin);
     pin.set_direction(Direction::In).unwrap();
     pin.set_active_low(true).unwrap();
 

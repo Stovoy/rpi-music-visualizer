@@ -34,6 +34,7 @@ fn main() {
     let mut window_sample_size = 1024;
     let mut amplitude_scalar = 16.0;
     let mut use_fake_audio = false;
+    let mut pin = 35;
     {
         let mut parser = ArgumentParser::new();
         parser.set_description("LED Music Visualizer");
@@ -55,13 +56,16 @@ fn main() {
         parser.refer(&mut amplitude_scalar)
               .add_option(&["--amplitude_scalar"], Store,
                           "Multiplier for audio ampltitude.");
+        parser.refer(&mut pin)
+              .add_option(&["--pin"], Store,
+                          "Multiplier for audio ampltitude.");
         parser.refer(&mut use_fake_audio)
               .add_option(&["--fake"], StoreTrue,
                           "Use fake audio.");
         parser.parse_args_or_exit();
     }
 
-    rpio::read_button();
+    rpio::read_button(pin);
 
     let (audio_tx, audio_rx) = mpsc::sync_channel::<audio::AudioFrame>(1);
 
