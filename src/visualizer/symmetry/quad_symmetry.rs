@@ -3,13 +3,13 @@ use gfx;
 use visualizer::symmetry::symmetry::SymmetryVisualizer;
 use visualizer::visualizer::SubVisualizer;
 
-pub struct BiSymmetryVisualizer {
+pub struct QuadSymmetryVisualizer {
     symmetry_visualizer: SymmetryVisualizer,
 }
 
-impl SubVisualizer for BiSymmetryVisualizer {
-    fn new() -> BiSymmetryVisualizer {
-        BiSymmetryVisualizer {
+impl SubVisualizer for QuadSymmetryVisualizer {
+    fn new() -> QuadSymmetryVisualizer {
+        QuadSymmetryVisualizer {
             symmetry_visualizer: SymmetryVisualizer::new(),
         }
     }
@@ -137,10 +137,12 @@ bool in_wave(vec2 p, vec2 wave, float x_epsilon, float y_epsilon) {
         p.y <= wave.y + y_epsilon && p.y >= wave.y - y_epsilon);
 }
 
-bool all_in_wave(vec2 p1, vec2 p2, vec2 wave, float x_epsilon, float y_epsilon) {
+bool all_in_wave(vec2 p1, vec2 p2, vec2 p3, vec2 p4, vec2 wave, float x_epsilon, float y_epsilon) {
     return (
         in_wave(p1, wave, x_epsilon, y_epsilon) ||
-        in_wave(p2, wave, x_epsilon, y_epsilon)
+        in_wave(p2, wave, x_epsilon, y_epsilon) ||
+        in_wave(p3, wave, x_epsilon, y_epsilon) ||
+        in_wave(p4, wave, x_epsilon, y_epsilon)
     );
 
 }
@@ -151,8 +153,11 @@ void main() {
         gl_FragColor = vec4(0.0);
     } else {
         vec2 p = v_position;
+        p *= rotation(phase);
         vec2 p1 = p;
-        vec2 p2 = vec2(-p.x, p.y);
+        vec2 p2 = p * rotation(TAU / 4.0);
+        vec2 p3 = p * rotation(TAU * 2.0 / 4.0);
+        vec2 p4 = p * rotation(TAU * 3.0 / 4.0);
 
         float phase_offset = 0.5;
         float min_phase = phase - phase_offset;
@@ -164,7 +169,7 @@ void main() {
                 t, rotation(t),
                 vec2(0.8 * fract(t / 10.0)), vec2(fract(t) - 0.5));
 
-            if (all_in_wave(p1, p2, wave, 0.05, 0.05)) {
+            if (all_in_wave(p1, p2, p3, p4, wave, 0.05, 0.05)) {
                 gl_FragColor = vec4(hsl2rgb(fract(t * 0.05 / TAU), 1.0, speed * 1.2), 1.0);
                 return;
             }
@@ -173,7 +178,7 @@ void main() {
                 t, rotation(t),
                 vec2(0.7 * fract(t / 9.0)), vec2(fract(t) - 0.5));
 
-            if (all_in_wave(p1, p2, wave, 0.05, 0.05)) {
+            if (all_in_wave(p1, p2, p3, p4, wave, 0.05, 0.05)) {
                 gl_FragColor = vec4(hsl2rgb(fract((t + TAU / 3.0) * 0.05 / TAU), 1.0, speed * 1.2), 1.0);
                 return;
             }
@@ -182,7 +187,7 @@ void main() {
                 t, rotation(t),
                 vec2(0.6 * fract(t / 8.0)), vec2(fract(t) - 0.5));
 
-            if (all_in_wave(p1, p2, wave, 0.05, 0.05)) {
+            if (all_in_wave(p1, p2, p3, p4, wave, 0.05, 0.05)) {
                 gl_FragColor = vec4(hsl2rgb(fract((t + TAU * 2.0 / 3.0) * 0.05 / TAU), 1.0, speed * 1.2), 1.0);
                 return;
             }

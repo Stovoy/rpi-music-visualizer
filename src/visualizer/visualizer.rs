@@ -7,6 +7,9 @@ use visualizer::equalizer::EqualizerVisualizer;
 use visualizer::power_circles::PowerCirclesVisualizer;
 use visualizer::smiley::SmileyVisualizer;
 use visualizer::symmetry::BiSymmetryVisualizer;
+use visualizer::symmetry::TriSymmetryVisualizer;
+use visualizer::symmetry::QuadSymmetryVisualizer;
+use visualizer::symmetry::PentaSymmetryVisualizer;
 
 pub trait SubVisualizer {
     fn new() -> Self where Self: Sized;
@@ -24,6 +27,9 @@ pub struct Visualizer {
     power_circles_visualizer: PowerCirclesVisualizer,
     smiley_visualizer: SmileyVisualizer,
     bisymmetry_visualizer: BiSymmetryVisualizer,
+    trisymmetry_visualizer: TriSymmetryVisualizer,
+    quadsymmetry_visualizer: QuadSymmetryVisualizer,
+    pentasymmetry_visualizer: PentaSymmetryVisualizer,
 
     selected_visualizer: String,
 }
@@ -37,6 +43,9 @@ impl Visualizer {
             power_circles_visualizer: PowerCirclesVisualizer::new(),
             smiley_visualizer: SmileyVisualizer::new(),
             bisymmetry_visualizer: BiSymmetryVisualizer::new(),
+            trisymmetry_visualizer: TriSymmetryVisualizer::new(),
+            quadsymmetry_visualizer: QuadSymmetryVisualizer::new(),
+            pentasymmetry_visualizer: PentaSymmetryVisualizer::new(),
 
             selected_visualizer,
         }
@@ -74,11 +83,14 @@ impl Visualizer {
                 texture, 0,
             ));
 
-            let mut all_visualizers: [&mut SubVisualizer; 4] = [
+            let mut all_visualizers: [&mut SubVisualizer; 7] = [
                 &mut self.equalizer_visualizer,
                 &mut self.power_circles_visualizer,
                 &mut self.smiley_visualizer,
-                &mut self.bisymmetry_visualizer];
+                &mut self.bisymmetry_visualizer,
+                &mut self.trisymmetry_visualizer,
+                &mut self.quadsymmetry_visualizer,
+                &mut self.pentasymmetry_visualizer];
             for visualizer in all_visualizers.iter_mut() {
                 let (program_id, framebuffer_id) = visualizer.setup(gl, framebuffer);
                 visualizer.post_setup(program_id, framebuffer_id);
@@ -102,6 +114,9 @@ impl Visualizer {
             "power_circles" => &mut self.power_circles_visualizer,
             "smiley" => &mut self.smiley_visualizer,
             "bisymmetry" => &mut self.bisymmetry_visualizer,
+            "trisymmetry" => &mut self.trisymmetry_visualizer,
+            "quadsymmetry" => &mut self.quadsymmetry_visualizer,
+            "pentasymmetry" => &mut self.pentasymmetry_visualizer,
 
             _ => &mut self.equalizer_visualizer,
         }

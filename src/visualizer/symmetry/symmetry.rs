@@ -15,16 +15,20 @@ pub struct SymmetryVisualizer {
     vertex_data: Vec<f32>,
 
     phase: f32,
+    speed: f32,
 }
+
+const MAX_SPEED: f32 = 0.2;
 
 impl SymmetryVisualizer {
     pub fn new() -> SymmetryVisualizer {
         SymmetryVisualizer {
             program_id: 0,
             framebuffer_id: 0,
-            vertex_data: Vec::new(),
+            vertex_data: generate_vertex_data(),
 
             phase: 0.0,
+            speed: 0.0,
         }
     }
 
@@ -34,11 +38,18 @@ impl SymmetryVisualizer {
     }
 
     pub fn update(&mut self, audio_frame: audio::AudioFrame) {
-        self.vertex_data = generate_vertex_data(audio_frame);
-        self.phase += 0.1;
-        if self.phase >= 3.14 * 2.0 {
-            self.phase -= 3.14 * 2.0;
+        let mut amplitude = 0.0;
+        for i in 0..20 {
+            if i >= audio_frame.hundred_hz_buckets.len() {
+                break;
+            }
+            amplitude += audio_frame.hundred_hz_buckets[i];
         }
+        amplitude /= 2.0;
+        amplitude = f32::min(1.0, amplitude);
+
+        self.speed = amplitude * MAX_SPEED;
+        self.phase += self.speed;
     }
 
     pub fn render_to_texture(&self, gl: &gfx::gl::Gl) {
@@ -70,6 +81,9 @@ impl SymmetryVisualizer {
             let phase_uniform = gl_try!(gl; gl.GetUniformLocation(self.program_id, b"phase\0".as_ptr() as *const _));
             gl_try!(gl; gl.Uniform1f(phase_uniform, self.phase));
 
+            let speed_uniform = gl_try!(gl; gl.GetUniformLocation(self.program_id, b"speed\0".as_ptr() as *const _));
+            gl_try!(gl; gl.Uniform1f(speed_uniform, self.speed / MAX_SPEED));
+
             gl_try!(gl; gl.BindFramebuffer(gl::FRAMEBUFFER, self.framebuffer_id));
 
             gl_try!(gl; gl.ClearColor(0.0, 0.0, 0.0, 1.0));
@@ -86,7 +100,7 @@ impl SymmetryVisualizer {
     }
 }
 
-fn generate_vertex_data(_audio_frame: audio::AudioFrame) -> Vec<f32> {
+fn generate_vertex_data() -> Vec<f32> {
     let mut vertex_data = Vec::with_capacity(NUM_FLOATS);
 
     let add_square = |vertex_data: &mut Vec<f32>,
