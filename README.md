@@ -15,11 +15,11 @@ Raspberry Pi Music Visualizer written in Rust
 
 [x] Microphone
 
-[ ] How to wear it (Comfortably)
+[x] How to wear it (Comfortably)
 
-[ ] Improve visualizer data quality
+[x] Improve visualizer data quality
 
-[ ] More visualizers
+[x] More visualizers
 
 # How to run on Raspberry Pi
 
