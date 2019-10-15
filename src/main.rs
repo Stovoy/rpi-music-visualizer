@@ -1,5 +1,3 @@
-#![feature(extern_prelude)]
-
 extern crate argparse;
 
 #[cfg(feature="hardware")]

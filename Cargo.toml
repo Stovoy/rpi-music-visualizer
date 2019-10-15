@@ -16,4 +16,4 @@ rand = "0.5.5"
 hardware = ["blinkt"]
 
 [build-dependencies]
-gl_generator = "0.9"
+gl_generator = "0.14"

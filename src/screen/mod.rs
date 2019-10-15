@@ -5,7 +5,7 @@ mod hardware;
 mod led_disk_emulator;
 mod raw;
 
-pub fn create_screen(selected_screen: String) -> Box<Screen> {
+pub fn create_screen(selected_screen: String) -> Box<dyn Screen> {
     match selected_screen.as_ref() {
         "raw" => Box::new(raw::RawScreen::new()),
         "emulator" => Box::new(led_disk_emulator::LedDiskEmulatorScreen::new()),

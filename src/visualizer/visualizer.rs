@@ -99,7 +99,7 @@ impl Visualizer {
                 texture, 0,
             ));
 
-            let mut all_visualizers: [&mut SubVisualizer; 7] = [
+            let mut all_visualizers: [&mut dyn SubVisualizer; 7] = [
                 &mut self.equalizer_visualizer,
                 &mut self.power_circles_visualizer,
                 &mut self.smiley_visualizer,
@@ -124,7 +124,7 @@ impl Visualizer {
         self.texture_id
     }
 
-    fn active_visualizer(&mut self) -> &mut SubVisualizer {
+    fn active_visualizer(&mut self) -> &mut dyn SubVisualizer {
         if self.rotate_visualizers &&
             self.last_rotation.elapsed() > TIME_PER_VISUALIZER {
             match self.selected_visualizer.as_ref() {
@@ -153,7 +153,7 @@ impl Visualizer {
     }
 }
 
-impl SubVisualizer {
+impl dyn SubVisualizer {
     fn setup(&self, gl: &gfx::gl::Gl, framebuffer_id: u32) -> (u32, u32) {
         unsafe {
             let vs = gl_try!(gl; gl.CreateShader(gl::VERTEX_SHADER));

@@ -28,7 +28,7 @@ macro_rules! gl_try {
 }
 
 pub fn run(visualizer: visualizer::Visualizer,
-           screen: Box<screen::Screen>,
+           screen: Box<dyn screen::Screen>,
            audio_rx: mpsc::Receiver<audio::AudioFrame>,
            size: i32) {
     if screen.uses_window() {
@@ -39,7 +39,7 @@ pub fn run(visualizer: visualizer::Visualizer,
 }
 
 fn render_with_window(visualizer: visualizer::Visualizer,
-                      screen: Box<screen::Screen>,
+                      screen: Box<dyn screen::Screen>,
                       audio_rx: mpsc::Receiver<audio::AudioFrame>,
                       size: i32) {
     let mut events_loop = glutin::EventsLoop::new();
@@ -72,7 +72,7 @@ fn render_with_window(visualizer: visualizer::Visualizer,
 }
 
 fn render_without_window(visualizer: visualizer::Visualizer,
-                         screen: Box<screen::Screen>,
+                         screen: Box<dyn screen::Screen>,
                          audio_rx: mpsc::Receiver<audio::AudioFrame>,
                          size: i32) {
     let window = glutin::WindowBuilder::new()
@@ -111,7 +111,7 @@ pub fn load_gl_window_as_context(gl_window: &glutin::GlWindow) -> gl::Gl {
 pub struct GfxPipeline {
     gl: gl::Gl,
     visualizer: visualizer::Visualizer,
-    screen: Box<screen::Screen>,
+    screen: Box<dyn screen::Screen>,
     size: i32,
 }
 
@@ -119,7 +119,7 @@ impl GfxPipeline {
     pub fn new(
         gl: gl::Gl,
         mut visualizer: visualizer::Visualizer,
-        mut screen: Box<screen::Screen>,
+        mut screen: Box<dyn screen::Screen>,
         size: i32,
     ) -> GfxPipeline {
         visualizer.setup(&gl, size);
